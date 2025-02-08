@@ -136,7 +136,7 @@ const HomePage = () => {
 
       {/* Login Required Dialog */}
       <Dialog 
-        open={showLoginDialog} 
+        open={showLoginDialog}  
         onOpenChange={setShowLoginDialog}
       >
         <DialogContent>
