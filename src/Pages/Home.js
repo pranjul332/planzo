@@ -46,7 +46,6 @@ const Home = () => {
               </div>
             </div>
           </header>
-
           {/* Main Content */}
 
           <div className="max-w-7xl mx-auto px-4 pb-6 ">
