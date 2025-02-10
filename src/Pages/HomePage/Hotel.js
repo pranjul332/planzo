@@ -17,20 +17,36 @@ import {
 import balloon from "../../images/balloon.png";
 import { Link } from "react-router-dom";
 
-const Hote = () => {
+const Hote = ({setActiveComponent}) => {
   return (
     <div className=" h-1/2 bg-pink-200">
+      {/* Hot Air Balloons - Decorative */}
+      <div className="z-0">
+        <div className="absolute left-0 top-0">
+          <div className="w-24 h-32 bg-red-100 rounded-lg transform -rotate-12"></div>
+        </div>
+        <div className="absolute right-0 top-0">
+          <div className="w-24 h-32 bg-red-100 rounded-lg transform rotate-12"></div>
+        </div>
+        <div className=" relative">
+          <img
+            src={balloon}
+            alt="Hot Air Balloon"
+            className="absolute mt-20 pt-5 left-20 ml-10 transform -translate-x-1/2 w-72 opacity-80"
+          />
+        </div>
+      </div>
       {/* Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 pt-6">
-        <div className="bg-white rounded-2xl p-6">
+      <div className="max-w-7xl mx-auto px-4 pt-6 ">
+        <div className="bg-white rounded-2xl p-6 z-10">
           <div className="flex gap-6 mb-6">
             <Link
-              to="/flights"
-              className="flex items-center gap-2 px-6 py-2 bg-red-50 text-red-600 rounded-full"
+              className="flex items-center gap-2 px-6 py-2"
+              onClick={() => setActiveComponent("flight")}
             >
               <Plane size={20} /> Flights
             </Link>
-            <Link to="/hotels" className="flex items-center gap-2 px-6 py-2">
+            <Link className="flex items-center gap-2 px-6 py-2 bg-red-50 text-red-600 rounded-full">
               <Calendar size={20} /> Hotels
             </Link>
             <Link to="/holidays" className="flex items-center gap-2 px-6 py-2">

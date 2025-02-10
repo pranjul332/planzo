@@ -21,11 +21,13 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
   const [tripType, setTripType] = useState("oneWay");
-const [activeSearch, setActiveSearch] = useState("flights");
+  const [activeSearch, setActiveSearch] = useState("flights");
 
-const handleButtonClick = (searchType) => {
-  setActiveSearch(searchType);
-};
+  const handleButtonClick = (searchType) => {
+    setActiveSearch(searchType);
+  };
+  const [activeComponent, setActiveComponent] = useState("flight");
+  console.log("Active Component:", activeComponent); // Debugging
 
   return (
     <div className="min-h-full bg-pink-200">
@@ -55,12 +57,28 @@ const handleButtonClick = (searchType) => {
             </div>
           </header>
           {/* Main Content */}
-          
-          <Link to="/flights"></Link>
-          <Link to="/hotels"></Link>
-          {/* <Hote/> */}
-          
 
+          {/* Buttons to switch between Flight and Hotel */}
+          <div>
+
+            {/* Buttons to switch between Flight and Hotel */}
+            <div style={{ margin: "20px 0" }}>
+              {activeComponent === "flight" ? (
+                <Fligh setActiveComponent={setActiveComponent} />
+              ) : (
+                <Hote setActiveComponent={setActiveComponent} />
+              )}
+            </div>
+
+            {/* Render Flight or Hotel based on state */}
+            {/* <div style={{ margin: "20px 0" }}>
+              {activeComponent === "flight" ? <Fligh /> : <Hote />}
+            </div> */}
+          </div>
+
+          {/* <Link to="/flights"></Link>
+          <Link to="/hotels"></Link> */}
+          {/* <Hote/> */}
           <div className="min-h-screen w-full bg-slate-100">
             {/* Previous header and search form components remain the same... */}
 

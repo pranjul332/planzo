@@ -17,7 +17,7 @@ import {
 import balloon from "../../images/balloon.png";
 import { Link } from "react-router-dom";
 import Home from "./Home";
-const Fligh = () => {
+const Fligh = React.memo(({setActiveComponent}) => {
       const [tripType, setTripType] = useState("oneWay");
     // const [activeSearch, setActiveSearch] = useState("flights");
   return (
@@ -43,10 +43,17 @@ const Fligh = () => {
         <div className="bg-white rounded-2xl shadow-lg p-6 relative z-10">
           {/* Travel Options */}
           <div className="flex gap-6 mb-6">
-            <Link to="/flights" className="flex items-center gap-2 px-6 py-2 bg-red-50 text-red-600 rounded-full">
+            <Link
+              
+              className="flex items-center gap-2 px-6 py-2 bg-red-50 text-red-600 rounded-full"
+            >
               <Plane size={20} /> Flights
             </Link>
-            <Link to="/hotels" className="flex items-center gap-2 px-6 py-2">
+            <Link
+              
+              className="flex items-center gap-2 px-6 py-2"
+              onClick={() => setActiveComponent("hotel")}
+            >
               <Calendar size={20} /> Hotels
             </Link>
             <Link to="/holidays" className="flex items-center gap-2 px-6 py-2">
@@ -211,6 +218,6 @@ const Fligh = () => {
       {/* <Home/> */}
     </div>
   );
-};
+});
 
 export default Fligh;
