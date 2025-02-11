@@ -18,6 +18,7 @@ import balloon from "../../images/balloon.png";
 import { Link } from "react-router-dom";
 import Home from "./Home";
 const Fligh = React.memo(({setActiveComponent}) => {
+      const [selectedFare, setSelectedFare] = useState("regular");
       const [tripType, setTripType] = useState("oneWay");
     // const [activeSearch, setActiveSearch] = useState("flights");
   return (
@@ -64,26 +65,26 @@ const Fligh = React.memo(({setActiveComponent}) => {
               <Calendar size={20} /> Holidays
             </Link>
             <Link
-                        to="/bus"
-                        className="flex items-center gap-2 px-6 py-2"
-                        onClick={() => setActiveComponent("bus")}
-                      >
-                        <Bus size={20} /> Bus
-                      </Link>
-                      <Link
-                        to="/trains"
-                        className="flex items-center gap-2 px-6 py-2"
-                        onClick={() => setActiveComponent("trains")}
-                      >
-                        <Train size={20} /> Trains
-                      </Link>
-                      <Link
-                        to="/cabs"
-                        className="flex items-center gap-2 px-6 py-2"
-                        onClick={() => setActiveComponent("cabs")}
-                      >
-                        <Car size={20} /> Cabs
-                      </Link>
+              to="/bus"
+              className="flex items-center gap-2 px-6 py-2"
+              onClick={() => setActiveComponent("bus")}
+            >
+              <Bus size={20} /> Bus
+            </Link>
+            <Link
+              to="/trains"
+              className="flex items-center gap-2 px-6 py-2"
+              onClick={() => setActiveComponent("trains")}
+            >
+              <Train size={20} /> Trains
+            </Link>
+            <Link
+              to="/cabs"
+              className="flex items-center gap-2 px-6 py-2"
+              onClick={() => setActiveComponent("cabs")}
+            >
+              <Car size={20} /> Cabs
+            </Link>
             <div className="ml-auto">
               <button className="flex items-center gap-2 text-blue-600">
                 <RefreshCw size={16} /> Claim your Covid Refund
@@ -184,41 +185,89 @@ const Fligh = React.memo(({setActiveComponent}) => {
 
           {/* Special Fares */}
           <div className="flex gap-4 mt-6">
-            <label className="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-lg">
+            {/* Regular Fare */}
+            <label
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer ${
+                selectedFare === "regular" ? "bg-red-50" : "bg-white border"
+              }`}
+            >
               <input
                 type="radio"
                 name="fareType"
                 className="text-red-600"
-                checked
+                value="regular"
+                checked={selectedFare === "regular"}
+                onChange={(e) => setSelectedFare(e.target.value)}
               />
               <div>
                 <div className="font-medium">Regular</div>
                 <div className="text-sm text-gray-500">Regular Fares</div>
               </div>
             </label>
-            <label className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-              <input type="radio" name="fareType" className="text-gray-400" />
+
+            {/* Student Fare */}
+            <label
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer ${
+                selectedFare === "student" ? "bg-red-50" : "bg-white border"
+              }`}
+            >
+              <input
+                type="radio"
+                name="fareType"
+                className="text-gray-400"
+                value="student"
+                checked={selectedFare === "student"}
+                onChange={(e) => setSelectedFare(e.target.value)}
+              />
               <div>
                 <div className="font-medium">Student</div>
                 <div className="text-sm text-gray-500">Extra Baggage</div>
               </div>
             </label>
-            <label className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-              <input type="radio" name="fareType" className="text-gray-400" />
+
+            {/* Armed Forces Fare */}
+            <label
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer ${
+                selectedFare === "armedForces" ? "bg-red-50" : "bg-white border"
+              }`}
+            >
+              <input
+                type="radio"
+                name="fareType"
+                className="text-gray-400"
+                value="armedForces"
+                checked={selectedFare === "armedForces"}
+                onChange={(e) => setSelectedFare(e.target.value)}
+              />
               <div>
                 <div className="font-medium">Armed Forces</div>
                 <div className="text-sm text-gray-500">Extra Discount</div>
               </div>
             </label>
-            <label className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-              <input type="radio" name="fareType" className="text-gray-400" />
+
+            {/* Senior Citizen Fare */}
+            <label
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer ${
+                selectedFare === "seniorCitizen"
+                  ? "bg-red-50"
+                  : "bg-white border"
+              }`}
+            >
+              <input
+                type="radio"
+                name="fareType"
+                className="text-gray-400"
+                value="seniorCitizen"
+                checked={selectedFare === "seniorCitizen"}
+                onChange={(e) => setSelectedFare(e.target.value)}
+              />
               <div>
                 <div className="font-medium">Senior Citizen</div>
                 <div className="text-sm text-gray-500">Extra Discount</div>
               </div>
             </label>
             <label className="flex items-center gap-2 ml-auto">
-              <input type="checkbox" className="text-red-600" checked />
+              <input type="checkbox" className="text-red-600" />
               Non-Stop Flights
             </label>
           </div>

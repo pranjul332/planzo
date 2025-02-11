@@ -4,6 +4,7 @@ import Home from './Pages/HomePage/Home'
 import { Route ,Routes } from "react-router-dom";
 import Fligh from './Pages/HomePage/Flight';
 import Hote from './Pages/HomePage/Hotel';
+import Booking from './Pages/BookingPage/Booking';
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
         <Route path="/holidays" element={<Home/>}></Route>
         <Route path="/bus" element={<Home/>}></Route>
         <Route path="/trains" element={<Home/>}></Route>
+        <Route path="/holidays/booking" element={<Booking/>}></Route>
       </Routes>
     </div>
   );

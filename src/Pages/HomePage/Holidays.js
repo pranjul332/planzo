@@ -103,9 +103,9 @@ const Holidays = ({ setActiveComponent }) => {
 
         {/* Search Button */}
         <div className="mt-8 flex justify-end">
-          <button className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
+          <Link to="/holidays/booking" className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
             Search
-          </button>
+          </Link>
         </div>
       </div>
     </div>
