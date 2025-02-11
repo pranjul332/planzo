@@ -17,8 +17,11 @@ const App = () => {
             </>
           }
         ></Route>
-        <Route path="/flights" element={<Fligh />}></Route>
-        <Route path="/hotels" element={<Hote />}></Route>
+        <Route path="/flights" element={<Home/>}></Route>
+        <Route path="/hotels" element={<Home/>}></Route>
+        <Route path="/holidays" element={<Home/>}></Route>
+        <Route path="/bus" element={<Home/>}></Route>
+        <Route path="/trains" element={<Home/>}></Route>
       </Routes>
     </div>
   );

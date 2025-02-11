@@ -5,12 +5,14 @@ import Home from './Pages/HomePage/Home';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom'
 import App from './App';
+import Bus from './Pages/HomePage/Bus';
 
 const root = ReactDOM.createRoot(document.getElementById('root')); 
 root.render(
   
   <BrowserRouter>
   <App/>
+  {/* <Bus/> */}
   </BrowserRouter>
 );
 

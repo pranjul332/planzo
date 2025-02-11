@@ -37,30 +37,50 @@ const Hote = ({setActiveComponent}) => {
         </div>
       </div>
       {/* Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 pt-6 ">
+      <div className="max-w-7xl mx-auto px-4  ">
         <div className="bg-white rounded-2xl p-6 z-10">
           <div className="flex gap-6 mb-6">
             <Link
+              to="/flights"
               className="flex items-center gap-2 px-6 py-2"
               onClick={() => setActiveComponent("flight")}
             >
               <Plane size={20} /> Flights
             </Link>
-            <Link className="flex items-center gap-2 px-6 py-2 bg-red-50 text-red-600 rounded-full">
+            <Link
+              to="/hotels"
+              className="flex items-center gap-2 px-6 py-2 bg-red-50 text-red-600 rounded-full"
+            >
               <Calendar size={20} /> Hotels
             </Link>
-            <Link to="/holidays" className="flex items-center gap-2 px-6 py-2">
+            <Link
+              to="/holidays"
+              className="flex items-center gap-2 px-6 py-2"
+              onClick={() => setActiveComponent("holidays")}
+            >
               <Calendar size={20} /> Holidays
             </Link>
-            <Link to="/bus" className="flex items-center gap-2 px-6 py-2">
-              <Bus size={20} /> Bus
-            </Link>
-            <Link to="trains" className="flex items-center gap-2 px-6 py-2">
-              <Train size={20} /> Trains
-            </Link>
-            <Link to="cabs" className="flex items-center gap-2 px-6 py-2">
-              <Car size={20} /> Cabs
-            </Link>
+            <Link
+                        to="/bus"
+                        className="flex items-center gap-2 px-6 py-2"
+                        onClick={() => setActiveComponent("bus")}
+                      >
+                        <Bus size={20} /> Bus
+                      </Link>
+                      <Link
+                        to="/trains"
+                        className="flex items-center gap-2 px-6 py-2"
+                        onClick={() => setActiveComponent("trains")}
+                      >
+                        <Train size={20} /> Trains
+                      </Link>
+                      <Link
+                        to="/cabs"
+                        className="flex items-center gap-2 px-6 py-2"
+                        onClick={() => setActiveComponent("cabs")}
+                      >
+                        <Car size={20} /> Cabs
+                      </Link>
             <div className="ml-auto">
               <button className="flex items-center gap-2 text-blue-600">
                 <RefreshCw size={16} /> Claim your Covid Refund

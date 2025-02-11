@@ -17,7 +17,10 @@ import {
 import balloon from '../../images/balloon.png'
 import Hote from "./Hotel"
 import Fligh from "./Flight";
+import Bu from "./Bus";
+import Trai from "./Trains";
 import { Link } from "react-router-dom";
+import Holidays from "./Holidays";
 
 const Home = () => {
   const [tripType, setTripType] = useState("oneWay");
@@ -36,7 +39,7 @@ const Home = () => {
           {/* Header */}
           <header className="bg-pink-200 py-3 px-4 shadow-sm">
             <div className="max-w-7xl mx-auto flex justify-between items-center">
-              <div className="text-3xl font-bold text-gray-700">yatra</div>
+              <div className="text-3xl font-bold text-gray-700">Planzo</div>
               <div className="flex items-center gap-4">
                 <button className="bg-gray-800 text-yellow-500 px-4 py-2 rounded-full">
                   JOIN <span className="italic">Planzo</span>PRIME
@@ -65,15 +68,19 @@ const Home = () => {
             <div style={{ margin: "20px 0" }}>
               {activeComponent === "flight" ? (
                 <Fligh setActiveComponent={setActiveComponent} />
-              ) : (
+              ) : activeComponent==="hotel" ? (
                 <Hote setActiveComponent={setActiveComponent} />
-              )}
+              ): activeComponent ==="holidays" ? (
+              <Holidays setActiveComponent={setActiveComponent} />
+            )
+            : activeComponent === "bus"?(
+              <Bu setActiveComponent={setActiveComponent} />
+            ):(
+              <Trai setActiveComponent={setActiveComponent} />
+            )}
             </div>
 
-            {/* Render Flight or Hotel based on state */}
-            {/* <div style={{ margin: "20px 0" }}>
-              {activeComponent === "flight" ? <Fligh /> : <Hote />}
-            </div> */}
+            
           </div>
 
           {/* <Link to="/flights"></Link>
