@@ -7,7 +7,8 @@ import {
   Users2,
   Map,
   Palette,
-  Info
+  Info,
+  BrainCircuit, // AI-themed icon
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -145,28 +146,43 @@ const Booking = () => {
         {/* Right Column */}
         <div className="lg:w-1/4">
           <div className="bg-white rounded-lg shadow-md p-4">
-            <div className="mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">Estimated Cost</span>
-                <div className="relative group">
-                  <Info className="h-4 w-4 text-gray-400 cursor-pointer" />
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-52 p-2 bg-gray-800 text-white text-xs rounded hidden group-hover:block z-10">
-                    This is Estimated cost generated for  
-                    <span className="font-bold text-red-400"> 1 Person </span> it may vary according to your
-                    plan and group
-                    <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+            {/* Estimated Cost and Plan with AI Button */}
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Estimated Cost</span>
+                  <div className="relative group">
+                    <Info className="h-4 w-4 text-gray-400 cursor-pointer" />
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-52 p-2 bg-gray-800 text-white text-xs rounded hidden group-hover:block z-10">
+                      This is Estimated cost generated for
+                      <span className="font-bold text-red-400">
+                        {" "}
+                        1 Person{" "}
+                      </span>{" "}
+                      it may vary according to your plan and group
+                      <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                    </div>
                   </div>
                 </div>
+                <div className="text-2xl font-bold">₹25,734</div>
               </div>
-              <div className="text-2xl font-bold">₹25,734</div>
+              <button className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-500 text-white text-sm px-3 py-2 rounded-lg hover:from-purple-700 hover:to-blue-600 transition-all lg:text-xsm lg:px-2 lg:gap-2 lg:rounded-xl">
+                <BrainCircuit className="h-4 w-4" /> {/* AI-themed icon */}
+                <span>Plan with AI</span>
+              </button>
             </div>
-            <button className="w-full bg-red-600 text-white py-2 rounded mb-2">
-              Plan Now
-            </button>
+
+            {/* Plan Now and Contact Seller Buttons */}
+            <Link to="/chat/chatname">
+              <button className="w-full bg-red-600 text-white py-2 rounded mb-2">
+                Plan Now
+              </button>
+            </Link>
             <button className="w-full bg-gray-800 text-white py-2 rounded">
               Contact Seller
             </button>
 
+            {/* Customizable Tour Section */}
             <div className="mt-6">
               <h3 className="font-semibold mb-2">Customizable Tour</h3>
               <p className="text-sm text-gray-600">
@@ -175,6 +191,7 @@ const Booking = () => {
               </p>
             </div>
 
+            {/* Stay Plan Section */}
             <div className="mt-6">
               <h3 className="font-semibold mb-2">Stay Plan</h3>
               <div className="text-sm">
