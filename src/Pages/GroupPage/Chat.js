@@ -1,8 +1,25 @@
 import React, { useState } from "react";
-import { User, Send, Paperclip, Image, Smile, X, Phone } from "lucide-react";
+import { User, Send, Paperclip, Image, Smile, X, Phone,Settings } from "lucide-react";
 import Menu from "./Menu";
+import GroupSetting from "./GroupSetting";
 
 const Chat = () => {
+  //  group setting 
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [groupData, setGroupData] = useState({
+    name: "Chat Recipient",
+    description: "",
+    budget: "",
+    date: "",
+    destination: "",
+    privacy: "public",
+    notifications: "all"
+  });
+  const handleUpdateGroup = (newData) => {
+    setGroupData(newData);
+  };
+
+
   const [isClipboardOpen, setIsClipboardOpen] = useState(false);
   const messages = [
     {
@@ -86,22 +103,44 @@ const Chat = () => {
         {/* Chat Header */}
         <div className="p-4 border-b bg-white sticky top-0 z-10">
           <div className="flex items-center group">
-            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+            >
               <User className="w-6 h-6 text-gray-500" />
-            </div>
+            </button>
             <div className="ml-3 flex-1">
               <h2 className="font-semibold">Chat Recipient</h2>
-              <p className="text-sm text-gray-500">Online</p>
+              <p className="text-sm text-gray-500">
+                {groupData.destination && `📍 ${groupData.destination}`}
+                {groupData.date && ` • 📅 ${groupData.date}`}
+                {!groupData.destination && !groupData.date && "Online"}
+              </p>
             </div>
-            <button
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full mr-2"
-              aria-label="Close chat"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
             <Phone className="w-6 h-6 text-gray-500" />
+            <Settings
+              className="w-6 h-6 text-gray-500 cursor-pointer hover:text-gray-700"
+              onClick={() => setIsSettingsOpen(true)}
+            />
           </div>
+          {groupData.description && (
+            <p className="text-sm text-gray-600 mt-2 px-2">
+              {groupData.description}
+            </p>
+          )}
+          {groupData.budget && (
+            <p className="text-sm text-gray-600 mt-1 px-2">
+              Budget: ${groupData.budget}
+            </p>
+          )}
         </div>
+        {/* Settings Modal */}
+        <GroupSetting
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          groupData={groupData}
+          onUpdateGroup={handleUpdateGroup}
+        />
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
