@@ -110,18 +110,18 @@ const Chat = () => {
               <User className="w-6 h-6 text-gray-500" />
             </button>
             <div className="ml-3 flex-1">
-              <h2 className="font-semibold">Chat Recipient</h2>
+              <h2 className="font-semibold">{groupData.name}</h2>
               <p className="text-sm text-gray-500">
                 {groupData.destination && `📍 ${groupData.destination}`}
                 {groupData.date && ` • 📅 ${groupData.date}`}
                 {!groupData.destination && !groupData.date && "Online"}
               </p>
             </div>
-            <Phone className="w-6 h-6 text-gray-500" />
-            <Settings
+            <Phone className="w-6 h-6 text-gray-500 mr-2" />
+            {/* <Settings
               className="w-6 h-6 text-gray-500 cursor-pointer hover:text-gray-700"
               onClick={() => setIsSettingsOpen(true)}
-            />
+            /> */}
           </div>
           {groupData.description && (
             <p className="text-sm text-gray-600 mt-2 px-2">
