@@ -6,13 +6,14 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom'
 import App from './App';
 import Bus from './Pages/HomePage/Bus';
+import TripsPage from './Pages/MyTripPage/TripPage';
 
 const root = ReactDOM.createRoot(document.getElementById('root')); 
 root.render(
   
   <BrowserRouter>
-  <App/>
-  {/* <Bus/> */}
+  {/* <App/> */}
+  <TripsPage/>
   </BrowserRouter>
 );
 
