@@ -1,13 +1,84 @@
 import React, { useState } from "react";
-import { User, Plus, Search } from "lucide-react";
+import { User, Plus, Search, X } from "lucide-react";
 import Sidebar from "./Sidebar";
 import TripCard from "./TripCard";
 import TripDetails from "./TripDetails";
 
+const AddMemberModal = ({ isOpen, onClose, onAdd }) => {
+  const [newMember, setNewMember] = useState({ name: "", role: "Member" });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onAdd({
+      id: Date.now(),
+      ...newMember,
+    });
+    setNewMember({ name: "", role: "Member" });
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Add New Member</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Name
+            </label>
+            <input
+              type="text"
+              value={newMember.name}
+              onChange={(e) =>
+                setNewMember({ ...newMember, name: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Role
+            </label>
+            <select
+              value={newMember.role}
+              onChange={(e) =>
+                setNewMember({ ...newMember, role: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
+            >
+              <option value="Member">Member</option>
+              <option value="Organizer">Organizer</option>
+              <option value="Guide">Guide</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-purple-600 text-white rounded-lg py-2 px-4 hover:bg-purple-700 transition-colors"
+          >
+            Add Member
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const TripsPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
-  const [trips] = useState([
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [trips, setTrips] = useState([
     {
       id: 1,
       name: "Summer Beach Vacation",
@@ -33,15 +104,33 @@ const TripsPage = () => {
         { category: "Food", amount: 300 },
       ],
     },
-    // Add more trips as needed
   ]);
 
   const handleTripClick = (trip) => {
     setSelectedTrip(trip);
   };
 
+  const handleAddMember = (newMember) => {
+    if (selectedTrip) {
+      const updatedTrips = trips.map((trip) => {
+        if (trip.id === selectedTrip.id) {
+          const updatedTrip = {
+            ...trip,
+            memberDetails: [...trip.memberDetails, newMember],
+            members: trip.members + 1,
+          };
+          setSelectedTrip(updatedTrip);
+          return updatedTrip;
+        }
+        return trip;
+      });
+      setTrips(updatedTrips);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      
       <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-2">
@@ -80,26 +169,37 @@ const TripsPage = () => {
 
       <main className="container mx-auto px-4 pt-24 pb-8">
         {selectedTrip ? (
-          <TripDetails
-            trip={selectedTrip}
-            onClose={() => setSelectedTrip(null)}
-          />
+          <>
+            <TripDetails
+              trip={selectedTrip}
+              onClose={() => setSelectedTrip(null)}
+              onAddMember={() => setIsAddMemberModalOpen(true)}
+            />
+            
+          </>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {trips.map((trip) => (
-              <TripCard
-                key={trip.id}
-                trip={trip}
-                onClick={() => handleTripClick(trip)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {trips.map((trip) => (
+                <TripCard
+                  key={trip.id}
+                  trip={trip}
+                  onClick={() => handleTripClick(trip)}
+                />
+              ))}
+            </div>
+            <button className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors flex items-center justify-center group">
+              <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            </button>
+          </>
         )}
       </main>
 
-      <button className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors flex items-center justify-center group">
-        <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
-      </button>
+      <AddMemberModal
+        isOpen={isAddMemberModalOpen}
+        onClose={() => setIsAddMemberModalOpen(false)}
+        onAdd={handleAddMember}
+      />
     </div>
   );
 };
