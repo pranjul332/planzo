@@ -2,28 +2,48 @@ import React, { useState } from "react";
 import { User, Plus, Search } from "lucide-react";
 import Sidebar from "./Sidebar";
 import TripCard from "./TripCard";
+import TripDetails from "./TripDetails";
 
 const TripsPage = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState(null);
   const [trips] = useState([
     {
       id: 1,
       name: "Summer Beach Vacation",
       description: "Planning for summer 2025",
       members: 4,
+      mainDestination: "Bali, Indonesia",
+      sideDestinations: ["Nusa Penida", "Gili Islands", "Lombok"],
+      budget: 5000,
+      currentSpent: 3200,
+      dates: { start: "2025-06-01", end: "2025-06-15" },
+      summary:
+        "A 2-week tropical getaway exploring the best of Indonesian islands.",
+      memberDetails: [
+        { id: 1, name: "John Doe", role: "Organizer" },
+        { id: 2, name: "Jane Smith", role: "Member" },
+        { id: 3, name: "Mike Johnson", role: "Member" },
+        { id: 4, name: "Sarah Wilson", role: "Member" },
+      ],
+      expenses: [
+        { category: "Accommodation", amount: 1500 },
+        { category: "Transportation", amount: 800 },
+        { category: "Activities", amount: 600 },
+        { category: "Food", amount: 300 },
+      ],
     },
-    {
-      id: 2,
-      name: "Mountain Hiking",
-      description: "Weekend getaway",
-      members: 2,
-    },
+    // Add more trips as needed
   ]);
 
+  const handleTripClick = (trip) => {
+    setSelectedTrip(trip);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 relative">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-10">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-purple-600">Planzo</span>
@@ -40,7 +60,10 @@ const TripsPage = () => {
                 />
               </div>
 
-              <div className="relative" onMouseEnter={() => setIsOpen(true)}>
+              <div
+                className="relative"
+                onMouseEnter={() => setIsSidebarOpen(true)}
+              >
                 <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
                   <User className="w-5 h-5 text-gray-700" />
                 </button>
@@ -50,14 +73,28 @@ const TripsPage = () => {
         </div>
       </header>
 
-      <Sidebar isOpen={isOpen} closeSidebar={() => setIsOpen(false)} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        closeSidebar={() => setIsSidebarOpen(false)}
+      />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {trips.map((trip) => (
-            <TripCard key={trip.id} trip={trip} />
-          ))}
-        </div>
+      <main className="container mx-auto px-4 pt-24 pb-8">
+        {selectedTrip ? (
+          <TripDetails
+            trip={selectedTrip}
+            onClose={() => setSelectedTrip(null)}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trips.map((trip) => (
+              <TripCard
+                key={trip.id}
+                trip={trip}
+                onClick={() => handleTripClick(trip)}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       <button className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors flex items-center justify-center group">

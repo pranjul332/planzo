@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { Users, MoreVertical, MapPin, Calendar } from "lucide-react";
 
-const TripCard = ({ trip }) => {
+const TripCard = ({ trip ,onClick}) => {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow relative p-5 border border-gray-100">
+    <div
+      onClick={() => onClick(trip)}
+      className="cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow relative p-5 border border-gray-100"
+    >
       <div className="absolute top-4 right-4">
         <button
           onClick={() => setShowMenu(!showMenu)}
