@@ -104,6 +104,31 @@ const TripsPage = () => {
         { category: "Food", amount: 300 },
       ],
     },
+    {
+      id: 1,
+      name: "Summer Beach Vacation",
+      description: "Planning for summer 2025",
+      members: 4,
+      mainDestination: "Bali, Indonesia",
+      sideDestinations: ["Nusa Penida", "Gili Islands", "Lombok"],
+      budget: 5000,
+      currentSpent: 3200,
+      dates: { start: "2025-06-01", end: "2025-06-15" },
+      summary:
+        "A 2-week tropical getaway exploring the best of Indonesian islands.",
+      memberDetails: [
+        { id: 1, name: "John Doe", role: "Organizer" },
+        { id: 2, name: "Jane Smith", role: "Member" },
+        { id: 3, name: "Mike Johnson", role: "Member" },
+        { id: 4, name: "Sarah Wilson", role: "Member" },
+      ],
+      expenses: [
+        { category: "Accommodation", amount: 1500 },
+        { category: "Transportation", amount: 800 },
+        { category: "Activities", amount: 600 },
+        { category: "Food", amount: 300 },
+      ],
+    },
   ]);
 
   const handleTripClick = (trip) => {
