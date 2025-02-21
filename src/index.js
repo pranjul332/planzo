@@ -12,8 +12,8 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   
   <BrowserRouter>
-  {/* <App/> */}
-  <TripsPage/>
+  <App/>
+  {/* <TripsPage/> */}
   </BrowserRouter>
 );
 

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   X,
   MapPin,
@@ -208,10 +209,12 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
             </div>
 
             {/* Chat Button */}
+            <Link to="/chat/chatname">
             <button className="w-full bg-purple-600 text-white rounded-xl py-4 px-6 flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors text-lg font-medium shadow-sm">
               <MessageCircle className="w-6 h-6" />
               Start Group Chat
             </button>
+            </Link>
           </div>
         </div>
       </div>

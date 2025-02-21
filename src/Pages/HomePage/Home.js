@@ -21,6 +21,7 @@ import Bu from "./Bus";
 import Trai from "./Trains";
 import { Link } from "react-router-dom";
 import Holidays from "./Holidays";
+import SignUp from "../../Auth/AuthComp";
 
 const Home = () => {
   const [tripType, setTripType] = useState("oneWay");
@@ -53,8 +54,8 @@ const Home = () => {
                   <PhoneCall size={20} />
                   For Travel Agents
                 </button>
-                <button className="bg-red-600 text-white px-6 py-2 rounded-lg">
-                  Login / Signup
+                <button >
+                  <SignUp/>
                 </button>
               </div>
             </div>

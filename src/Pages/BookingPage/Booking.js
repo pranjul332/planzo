@@ -173,7 +173,7 @@ const Booking = () => {
             </div>
 
             {/* Plan Now and Contact Seller Buttons */}
-            <Link to="/chat/chatname">
+            <Link to="/trip/ManageTrip">
               <button className="w-full bg-red-600 text-white py-2 rounded mb-2">
                 Plan Now
               </button>
