@@ -1,12 +1,60 @@
 import React, { useState } from "react";
-import { User, Plus, Search, X } from "lucide-react";
+import {
+  User,
+  Plus,
+  Search,
+  X,
+  Plane,
+  MapPin,
+  Calendar,
+  Palmtree,
+  Heart,
+  Sunrise,
+  Moon,
+  Cloud,
+  Rainbow,
+} from "lucide-react";
 import Sidebar from "./Sidebar";
 import TripCard from "./TripCard";
 import TripDetails from "./TripDetails";
 import AddMemberModal from "./AddMemberModal";
+import CreateTripModal from "./CreateTrip";
 
+const EmptyState = () => (
+  <div className="text-center py-16">
+    <div className="flex justify-center mb-6">
+      <Plane className="w-16 h-16 text-blue-400 animate-bounce" />
+    </div>
+    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+      No trips yet! ✈️
+    </h3>
+    <p className="text-gray-500 mb-6">Time to plan your next adventure!</p>
+  </div>
+);
+
+const WelcomeBanner = () => (
+  <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl p-6 mb-8 relative overflow-hidden">
+    <div className="absolute top-0 right-0 opacity-10">
+      <Rainbow className="w-32 h-32 text-white" />
+    </div>
+    <div className="relative z-10">
+      <h1 className="text-white text-2xl font-bold mb-2">
+        Welcome to Your Travel Hub! 🌈
+      </h1>
+      <p className="text-blue-100">
+        Where every journey begins with a dream ✨
+      </p>
+    </div>
+  </div>
+);
+
+const WeatherIcon = ({ time }) => {
+  if (time === "day") return <Sunrise className="w-6 h-6" />;
+  return <Moon className="w-6 h-6" />;
+};
 
 const TripsPage = () => {
+  const [isCreateTripModalOpen, setIsCreateTripModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
@@ -37,7 +85,7 @@ const TripsPage = () => {
       ],
     },
     {
-      id: 1,
+      id: 2,
       name: "Summer Beach Vacation",
       description: "Planning for summer 2025",
       members: 4,
@@ -66,6 +114,32 @@ const TripsPage = () => {
   const handleTripClick = (trip) => {
     setSelectedTrip(trip);
   };
+  // In your TripsPage component, update the handleCreateTrip function:
+  const handleCreateTrip = (newTrip) => {
+    const formattedTrip = {
+      id: Date.now(),
+      name: newTrip.name,
+      description: newTrip.description,
+      members: newTrip.members.length,
+      mainDestination: newTrip.mainDestination,
+      sideDestinations: [], // Initialize with empty array
+      budget: parseInt(newTrip.budget),
+      currentSpent: 0,
+      dates: {
+        start: newTrip.startDate,
+        end: newTrip.endDate,
+      },
+      summary: newTrip.description,
+      memberDetails: newTrip.members.map((member) => ({
+        id: member.id,
+        name: member.name,
+        role: member.role,
+      })),
+      expenses: [], // Initialize with empty array
+    };
+
+    setTrips((prevTrips) => [...prevTrips, formattedTrip]);
+  };
 
   const handleAddMember = (newMember) => {
     if (selectedTrip) {
@@ -86,23 +160,31 @@ const TripsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      
-      <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-purple-600">Planzo</span>
-              <span className="text-sm text-gray-500 mt-1">My Trips</span>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+      <header className="bg-white shadow-lg fixed top-0 left-0 right-0 z-10">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Palmtree className="w-8 h-8 text-purple-500" />
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+                    Planzo
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    My Adventures ✨
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <div className="relative flex items-center">
-                <Search className="absolute left-3 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-4 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search trips..."
-                  className="pl-10 pr-4 py-2 w-64 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                  placeholder="Search your adventures... 🔍"
+                  className="pl-12 pr-6 py-3 w-72 rounded-full border-2 border-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 hover:border-purple-200"
                 />
               </div>
 
@@ -110,8 +192,8 @@ const TripsPage = () => {
                 className="relative"
                 onMouseEnter={() => setIsSidebarOpen(true)}
               >
-                <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  <User className="w-5 h-5 text-gray-700" />
+                <button className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center hover:opacity-90 transition-opacity">
+                  <User className="w-6 h-6 text-white" />
                 </button>
               </div>
             </div>
@@ -124,29 +206,36 @@ const TripsPage = () => {
         closeSidebar={() => setIsSidebarOpen(false)}
       />
 
-      <main className="container mx-auto px-4 pt-24 pb-8">
+      <main className="container mx-auto px-6 pt-28 pb-8">
+        {!selectedTrip && <WelcomeBanner />}
+
         {selectedTrip ? (
-          <>
-            <TripDetails
-              trip={selectedTrip}
-              onClose={() => setSelectedTrip(null)}
-              onAddMember={() => setIsAddMemberModalOpen(true)}
-            />
-            
-          </>
+          <TripDetails
+            trip={selectedTrip}
+            onClose={() => setSelectedTrip(null)}
+            onAddMember={() => setIsAddMemberModalOpen(true)}
+          />
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {trips.map((trip) => (
-                <TripCard
-                  key={trip.id}
-                  trip={trip}
-                  onClick={() => handleTripClick(trip)}
-                />
-              ))}
-            </div>
-            <button className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors flex items-center justify-center group">
-              <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            {trips.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {trips.map((trip) => (
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    onClick={() => handleTripClick(trip)}
+                  />
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setIsCreateTripModalOpen(true)}
+              className="fixed bottom-8 right-8 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full shadow-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2 group"
+            >
+              <Plus className="w-6 h-6 group-hover:rotate-180 transition-transform duration-300" />
+              <span className="font-medium">New Adventure</span>
             </button>
           </>
         )}
@@ -156,6 +245,11 @@ const TripsPage = () => {
         isOpen={isAddMemberModalOpen}
         onClose={() => setIsAddMemberModalOpen(false)}
         onAdd={handleAddMember}
+      />
+      <CreateTripModal
+        isOpen={isCreateTripModalOpen}
+        onClose={() => setIsCreateTripModalOpen(false)}
+        onCreateTrip={handleCreateTrip}
       />
     </div>
   );
