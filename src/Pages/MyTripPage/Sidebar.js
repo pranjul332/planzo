@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   User,
@@ -10,16 +11,20 @@ import {
   LogOut,
 } from "lucide-react";
 
-const SidebarItem = ({ icon, text }) => {
+const SidebarItem = ({ icon, text, onClick }) => {
   return (
-    <button className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-colors">
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-colors"
+    >
       {icon}
       <span>{text}</span>
     </button>
   );
 };
 
-const Sidebar = ({ isOpen, closeSidebar }) => {
+const Sidebar = ({ isOpen, closeSidebar, user }) => {
+  const navigate = useNavigate();
   const sidebarRef = useRef(null);
 
   useEffect(() => {
@@ -40,6 +45,16 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
       }
     };
   }, [isOpen, closeSidebar]);
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    closeSidebar();
+  };
+
+  const handleLogout = () => {
+    // Add logout logic here
+    console.log("Logging out...");
+  };
 
   return (
     <div
@@ -64,21 +79,47 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
               className="w-full h-full rounded-full object-cover"
             />
           </div>
-          <span className="font-medium text-gray-800">John Doe</span>
-          <span className="text-sm text-gray-500">john.doe@example.com</span>
+          <span className="font-medium text-gray-800">
+            {user?.name || "Guest"}
+          </span>
+          <span className="text-sm text-gray-500">{user?.email || ""}</span>
         </div>
 
         <nav className="flex flex-col gap-2">
-          <SidebarItem icon={<User />} text="Profile" />
-          <SidebarItem icon={<Gift />} text="Offers" />
-          <SidebarItem icon={<Users />} text="My Friends" />
-          <SidebarItem icon={<LayoutDashboard />} text="Dashboard" />
-          <SidebarItem icon={<List />} text="Bucket List" />
-          <SidebarItem icon={<Crown />} text="Premium" />
+          <SidebarItem
+            icon={<User />}
+            text="Profile"
+            onClick={() => handleNavigation("/profile")}
+          />
+          <SidebarItem
+            icon={<Gift />}
+            text="Offer"
+            onClick={() => handleNavigation("/offer")}
+          />
+          <SidebarItem
+            icon={<Users />}
+            text="My Friends"
+            onClick={() => handleNavigation("/friends")}
+          />
+          <SidebarItem
+            icon={<LayoutDashboard />}
+            text="Dashboard"
+            onClick={() => handleNavigation("/dashboard")}
+          />
+          <SidebarItem
+            icon={<List />}
+            text="Bucket List"
+            onClick={() => handleNavigation("/bucketlist")}
+          />
+          <SidebarItem
+            icon={<Crown />}
+            text="Premium"
+            onClick={() => handleNavigation("/premium")}
+          />
         </nav>
 
         <div className="absolute bottom-4 left-0 w-full px-4">
-          <SidebarItem icon={<LogOut />} text="Logout" />
+          <SidebarItem icon={<LogOut />} text="Logout" onClick={handleLogout} />
         </div>
       </div>
     </div>
