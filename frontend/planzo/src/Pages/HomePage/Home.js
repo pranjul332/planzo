@@ -21,7 +21,7 @@ import Bu from "./Bus";
 import Trai from "./Trains";
 import { Link } from "react-router-dom";
 import Holidays from "./Holidays";
-import SignUp from "../../Auth/AuthComp";
+import SignUp from "../../Auth/Signup";
 
 const Home = () => {
   const [tripType, setTripType] = useState("oneWay");

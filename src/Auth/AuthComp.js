@@ -1,31 +1,24 @@
-import React from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import { LogIn, LogOut, UserCircle, Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { LogIn, LogOut, UserCircle, Loader2, Github } from "lucide-react";
+import { useAuth } from "./AuthContext";
+import AuthModal from "./AuthModal";
 
 const AuthComp = () => {
-  const { loginWithRedirect, isAuthenticated, logout, user, isLoading } =
-    useAuth0();
-
-  const handleLogin = async () => {
-    try {
-      await loginWithRedirect();
-    } catch (error) {
-      console.error("Login error:", error);
-      // You might want to show a user-friendly error message here
-    }
-  };
+  const {
+    isAuthenticated,
+    user,
+    logout,
+    loginWithAuth0,
+    isLoading,
+    authMethod,
+  } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await logout({
-        returnTo: window.location.origin,
-        clientId: "rTSmiXDjsJNmPu4OOtOpHzp10dEM6q0O",
-      });
+      await logout();
     } catch (error) {
       console.error("Logout error:", error);
-      // Fallback manual cleanup
-      localStorage.removeItem("auth0.is.authenticated");
-      window.location.href = window.location.origin;
     }
   };
 
@@ -56,6 +49,9 @@ const AuthComp = () => {
           ) : (
             <UserCircle size={32} />
           )}
+          <span className="hidden md:inline text-sm text-gray-700">
+            {authMethod === "auth0" ? "Auth0" : "Email"}
+          </span>
         </div>
         <button
           onClick={handleLogout}
@@ -72,13 +68,28 @@ const AuthComp = () => {
 
   // Unauthenticated state
   return (
-    <button
-      onClick={handleLogin}
-      className="bg-red-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors"
-    >
-      <LogIn size={20} />
-      <span>Login / Signup</span>
-    </button>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => setShowAuthModal(true)}
+        className="bg-red-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors"
+      >
+        <LogIn size={20} />
+        <span>Email Login</span>
+      </button>
+
+      <button
+        onClick={loginWithAuth0}
+        className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+      >
+        <Github size={20} />
+        <span className="hidden md:inline">Login with Auth0</span>
+      </button>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
+    </div>
   );
 };
 
