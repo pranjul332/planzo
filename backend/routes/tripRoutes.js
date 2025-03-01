@@ -33,10 +33,23 @@ router.get("/:id", async (req, res) => {
 });
 
 // Create a new trip
+// Create a new trip with duplicate prevention
 router.post("/", async (req, res) => {
   try {
-    const { name, mainDestination, startDate, endDate, activities, notes,members } =
-      req.body;
+    const { name, mainDestination, startDate, endDate, activities, notes, members, requestId } = req.body;
+
+    // Check if we've already processed this request
+    if (requestId) {
+      const existingTrip = await Trip.findOne({ 
+        requestId, 
+        auth0Id: req.userId 
+      });
+      
+      if (existingTrip) {
+        console.log("Duplicate request detected, returning existing trip");
+        return res.status(200).json(existingTrip);
+      }
+    }
 
     const trip = new Trip({
       name,
@@ -46,6 +59,7 @@ router.post("/", async (req, res) => {
       activities,
       notes,
       members,
+      requestId, // Store the request ID to detect duplicates
       auth0Id: req.userId, // Store Auth0 ID instead of MongoDB user ID
     });
 
@@ -55,7 +69,6 @@ router.post("/", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 // Update a trip
 router.put("/:id", async (req, res) => {
   try {

@@ -13,16 +13,12 @@ import {
 import { useTripService } from "../../services/tripService";
 import { useAuth0 } from "@auth0/auth0-react";
 
-const CreateTripModal = ({
-  isOpen,
-  onClose,
-  onCreateTrip,
-  initialData,
-}) => {
+const CreateTripModal = ({ isOpen, onClose, onCreateTrip, initialData }) => {
   const { isAuthenticated } = useAuth0();
   const { createTrip } = useTripService();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(false); // Track if already submitted
 
   const [tripData, setTripData] = useState({
     name: "",
@@ -46,14 +42,18 @@ const CreateTripModal = ({
         ...prev,
         mainDestination: initialData.mainDestination || prev.mainDestination,
         budget: initialData.budget || prev.budget,
-        name: initialData.mainDestination
-          ? `Trip to ${initialData.mainDestination}`
-          : prev.name,
+        name:
+          initialData.name ||
+          (initialData.mainDestination
+            ? `Trip to ${initialData.mainDestination}`
+            : prev.name),
       }));
     }
 
-    // Reset error state when modal opens/closes
+    // Reset error state and submission flags when modal opens/closes
     setError(null);
+    setIsSubmitted(false);
+    setIsSubmitting(false);
   }, [isOpen, initialData]);
 
   const handleInputChange = (e) => {
@@ -84,6 +84,12 @@ const CreateTripModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent double submissions
+    if (isSubmitting || isSubmitted) {
+      console.log("Preventing duplicate submission");
+      return;
+    }
+
     if (!isAuthenticated) {
       setError("You must be logged in to create a trip");
       return;
@@ -99,11 +105,17 @@ const CreateTripModal = ({
         members: tripData.members.map(({ name, role }) => ({ name, role })),
       };
 
-      // Call backend API
+      // Call backend API - ensure this only happens once
       const createdTrip = await createTrip(apiTripData);
 
+      // Mark as submitted to prevent duplicate calls
+      setIsSubmitted(true);
+
       // Call parent component callback with the created trip
-      onCreateTrip(createdTrip);
+      // Ensure the parent doesn't trigger another create operation
+      if (onCreateTrip && typeof onCreateTrip === "function") {
+        onCreateTrip(createdTrip);
+      }
 
       // Reset form
       setTripData({
@@ -129,6 +141,7 @@ const CreateTripModal = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl">
+        {/* Modal content remains the same */}
         <div className="absolute right-6 top-6">
           <button
             onClick={onClose}
@@ -152,6 +165,7 @@ const CreateTripModal = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Form fields remain the same */}
           <div className="space-y-5">
             <div className="group">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
@@ -169,6 +183,7 @@ const CreateTripModal = ({
               />
             </div>
 
+            {/* Other form fields... */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                 <Plane className="w-4 h-4 text-green-400" />
@@ -309,7 +324,7 @@ const CreateTripModal = ({
               className={`px-6 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2 ${
                 isSubmitting ? "opacity-70 cursor-not-allowed" : ""
               }`}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSubmitted}
             >
               {isSubmitting ? (
                 <span className="animate-pulse">Processing...</span>

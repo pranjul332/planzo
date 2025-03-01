@@ -16,24 +16,29 @@ export const useTripService = () => {
 
       console.log("Token obtained for API call");
 
+      // Adding a timestamp or request ID can help identify duplicate requests
+      const requestData = {
+        ...tripData,
+        requestId: `req_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
+      };
+
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/trips`,
-        tripData,
+        requestData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      
+
       return response.data;
-      
     } catch (error) {
-        
       console.error("Error creating trip:", error);
       // More detailed error handling
       if (error.response) {
-        
         // The request was made and the server responded with a status code
         console.error("Response error:", error.response.data);
         throw new Error(error.response.data.message || "Failed to create trip");
