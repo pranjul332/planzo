@@ -86,8 +86,8 @@ const TripsPage = () => {
         mainDestination: trip.mainDestination || "",
         // Ensure dates object exists
         dates: {
-          start: trip.dates?.start || null,
-          end: trip.dates?.end || null,
+          start: trip.startDate || null,
+          end: trip.endDate || null,
         },
         // Add other properties with fallbacks
         budget: trip.budget || 0,
@@ -159,10 +159,8 @@ const TripsPage = () => {
         description: newTripData.description,
         mainDestination: newTripData.mainDestination,
         budget: parseInt(newTripData.budget),
-        dates: {
-          start: newTripData.startDate,
-          end: newTripData.endDate,
-        },
+        startDate: newTripData.startDate, // Fix this
+        endDate: newTripData.endDate, // Fix this
         members: newTripData.members.map((member) => ({
           name: member.name,
           role: member.role,
