@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
   Plus,
@@ -19,6 +19,7 @@ import TripCard from "./TripCard";
 import TripDetails from "./TripDetails";
 import AddMemberModal from "./AddMemberModal";
 import CreateTripModal from "./CreateTrip";
+import { useTripService } from "../../services/tripService"; // Import the hook
 
 const EmptyState = () => (
   <div className="text-center py-16">
@@ -58,104 +59,157 @@ const TripsPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
-  const [trips, setTrips] = useState([
-    {
-      id: 1,
-      name: "Summer Beach Vacation",
-      description: "Planning for summer 2025",
-      members: 4,
-      mainDestination: "Bali, Indonesia",
-      sideDestinations: ["Nusa Penida", "Gili Islands", "Lombok"],
-      budget: 5000,
-      currentSpent: 3200,
-      dates: { start: "2025-06-01", end: "2025-06-15" },
-      summary:
-        "A 2-week tropical getaway exploring the best of Indonesian islands.",
-      memberDetails: [
-        { id: 1, name: "John Doe", role: "Organizer" },
-        { id: 2, name: "Jane Smith", role: "Member" },
-        { id: 3, name: "Mike Johnson", role: "Member" },
-        { id: 4, name: "Sarah Wilson", role: "Member" },
-      ],
-      expenses: [
-        { category: "Accommodation", amount: 1500 },
-        { category: "Transportation", amount: 800 },
-        { category: "Activities", amount: 600 },
-        { category: "Food", amount: 300 },
-      ],
-    },
-    {
-      id: 2,
-      name: "Summer Beach Vacation",
-      description: "Planning for summer 2025",
-      members: 4,
-      mainDestination: "Bali, Indonesia",
-      sideDestinations: ["Nusa Penida", "Gili Islands", "Lombok"],
-      budget: 5000,
-      currentSpent: 3200,
-      dates: { start: "2025-06-01", end: "2025-06-15" },
-      summary:
-        "A 2-week tropical getaway exploring the best of Indonesian islands.",
-      memberDetails: [
-        { id: 1, name: "John Doe", role: "Organizer" },
-        { id: 2, name: "Jane Smith", role: "Member" },
-        { id: 3, name: "Mike Johnson", role: "Member" },
-        { id: 4, name: "Sarah Wilson", role: "Member" },
-      ],
-      expenses: [
-        { category: "Accommodation", amount: 1500 },
-        { category: "Transportation", amount: 800 },
-        { category: "Activities", amount: 600 },
-        { category: "Food", amount: 300 },
-      ],
-    },
-  ]);
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleTripClick = (trip) => {
-    setSelectedTrip(trip);
-  };
-  // In your TripsPage component, update the handleCreateTrip function:
-  const handleCreateTrip = (newTrip) => {
-    const formattedTrip = {
-      id: Date.now(),
-      name: newTrip.name,
-      description: newTrip.description,
-      members: newTrip.members.length,
-      mainDestination: newTrip.mainDestination,
-      sideDestinations: [], // Initialize with empty array
-      budget: parseInt(newTrip.budget),
-      currentSpent: 0,
-      dates: {
-        start: newTrip.startDate,
-        end: newTrip.endDate,
-      },
-      summary: newTrip.description,
-      memberDetails: newTrip.members.map((member) => ({
-        id: member.id,
-        name: member.name,
-        role: member.role,
-      })),
-      expenses: [], // Initialize with empty array
-    };
+  // Get tripService methods from the hook
+  const { createTrip, getTrips, getTripById } = useTripService();
 
-    setTrips((prevTrips) => [...prevTrips, formattedTrip]);
+  // Fetch trips on component mount
+  useEffect(() => {
+    fetchTrips();
+  }, []);
+
+  // Function to fetch trips from API
+  const fetchTrips = async () => {
+    try {
+      setLoading(true);
+      const fetchedTrips = await getTrips();
+
+      // Format the trips data to ensure consistent structure
+      const formattedTrips = fetchedTrips.map((trip) => ({
+        id: trip.id,
+        name: trip.name || "Unnamed Trip",
+        description: trip.description || "",
+        members: trip.members || 0,
+        mainDestination: trip.mainDestination || "",
+        // Ensure dates object exists
+        dates: {
+          start: trip.dates?.start || null,
+          end: trip.dates?.end || null,
+        },
+        // Add other properties with fallbacks
+        budget: trip.budget || 0,
+        currentSpent: trip.currentSpent || 0,
+        memberDetails: trip.memberDetails || [],
+        expenses: trip.expenses || [],
+        sideDestinations: trip.sideDestinations || [],
+        summary: trip.summary || trip.description || "",
+      }));
+
+      setTrips(formattedTrips);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch trips:", err);
+      setError("Failed to load trips. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAddMember = (newMember) => {
+ const handleTripClick = async (trip) => {
+   try {
+     // Get detailed trip information when a trip is clicked
+     const detailedTrip = await getTripById(trip.id);
+
+     // Format the detailed trip data
+     const formattedTrip = {
+       id: detailedTrip.id,
+       name: detailedTrip.name || "Unnamed Trip",
+       description: detailedTrip.description || "",
+       members: detailedTrip.members || 0,
+       mainDestination: detailedTrip.mainDestination || "",
+       // Ensure dates object exists
+       dates: {
+         start: detailedTrip.dates?.start || null,
+         end: detailedTrip.dates?.end || null,
+       },
+       // Add other properties with fallbacks
+       budget: detailedTrip.budget || 0,
+       currentSpent: detailedTrip.currentSpent || 0,
+       memberDetails: detailedTrip.memberDetails || [],
+       expenses: detailedTrip.expenses || [],
+       sideDestinations: detailedTrip.sideDestinations || [],
+       summary: detailedTrip.summary || detailedTrip.description || "",
+     };
+
+     setSelectedTrip(formattedTrip);
+   } catch (err) {
+     console.error("Failed to fetch trip details:", err);
+     // Fallback to using the basic trip data if detailed fetch fails
+     // Make sure this trip data is also properly formatted
+     const formattedFallbackTrip = {
+       ...trip,
+       dates: trip.dates || { start: null, end: null },
+       memberDetails: trip.memberDetails || [],
+       expenses: trip.expenses || [],
+       sideDestinations: trip.sideDestinations || [],
+     };
+     setSelectedTrip(formattedFallbackTrip);
+   }
+ };
+
+  // Updated to use the API service
+  const handleCreateTrip = async (newTripData) => {
+    try {
+      // Format trip data as needed for your API
+      const formattedTrip = {
+        name: newTripData.name,
+        description: newTripData.description,
+        mainDestination: newTripData.mainDestination,
+        budget: parseInt(newTripData.budget),
+        dates: {
+          start: newTripData.startDate,
+          end: newTripData.endDate,
+        },
+        members: newTripData.members.map((member) => ({
+          name: member.name,
+          role: member.role,
+        })),
+      };
+
+      // Create trip via API
+      await createTrip(formattedTrip);
+
+      // Refresh trips list
+      fetchTrips();
+
+      // Close modal
+      setIsCreateTripModalOpen(false);
+    } catch (err) {
+      console.error("Failed to create trip:", err);
+      alert("Failed to create trip. Please try again later.");
+    }
+  };
+
+  const handleAddMember = async (newMember) => {
     if (selectedTrip) {
-      const updatedTrips = trips.map((trip) => {
-        if (trip.id === selectedTrip.id) {
-          const updatedTrip = {
-            ...trip,
-            memberDetails: [...trip.memberDetails, newMember],
-            members: trip.members + 1,
-          };
-          setSelectedTrip(updatedTrip);
-          return updatedTrip;
-        }
-        return trip;
-      });
-      setTrips(updatedTrips);
+      try {
+        // Here you would typically call an API to add a member
+        // For now, we'll just update the local state
+        const updatedTrips = trips.map((trip) => {
+          if (trip.id === selectedTrip.id) {
+            const updatedTrip = {
+              ...trip,
+              memberDetails: [...(trip.memberDetails || []), newMember],
+              members: (trip.memberDetails?.length || 0) + 1,
+            };
+            setSelectedTrip(updatedTrip);
+            return updatedTrip;
+          }
+          return trip;
+        });
+        setTrips(updatedTrips);
+        setIsAddMemberModalOpen(false);
+
+        // In a real implementation, you would refresh the trip details
+        // const refreshedTrip = await getTripById(selectedTrip.id);
+        // setSelectedTrip(refreshedTrip);
+      } catch (err) {
+        console.error("Failed to add member:", err);
+        alert("Failed to add member. Please try again.");
+      }
     }
   };
 
@@ -217,7 +271,21 @@ const TripsPage = () => {
           />
         ) : (
           <>
-            {trips.length === 0 ? (
+            {loading ? (
+              <div className="flex justify-center items-center py-16">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-16 text-red-500">
+                <p>{error}</p>
+                <button
+                  onClick={fetchTrips}
+                  className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : trips.length === 0 ? (
               <EmptyState />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

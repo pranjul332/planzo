@@ -35,6 +35,26 @@ const TripCard = ({ trip, onClick }) => {
     console.log(`${action} clicked`);
   };
 
+  // Format date with fallback for missing or invalid dates
+  const formatDate = (dateString) => {
+    if (!dateString) return "TBD";
+
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "TBD";
+    }
+  };
+
+  // Get formatted dates with fallbacks
+  const startDate = formatDate(trip?.dates?.start);
+  const endDate = formatDate(trip?.dates?.end);
+
+  // Safe access to member details
+  const memberDetails = trip?.memberDetails || [];
+  const memberCount = trip?.members || memberDetails.length || 0;
+
   return (
     <div
       onClick={() => onClick(trip)}
@@ -76,39 +96,42 @@ const TripCard = ({ trip, onClick }) => {
         )}
       </div>
 
-      <h3 className="text-lg font-semibold mb-2">{trip.name}</h3>
+      <h3 className="text-lg font-semibold mb-2">
+        {trip?.name || "Unnamed Trip"}
+      </h3>
 
       <div className="flex items-center gap-2 text-gray-600 text-sm mb-2">
         <MapPin className="w-4 h-4" />
-        <span>{trip.mainDestination}</span>
+        <span>{trip?.mainDestination || "No destination set"}</span>
       </div>
 
       <div className="flex items-center gap-2 text-gray-600 text-sm mb-3">
         <Calendar className="w-4 h-4" />
         <span>
-          {new Date(trip.dates.start).toLocaleDateString()} -{" "}
-          {new Date(trip.dates.end).toLocaleDateString()}
+          {startDate} - {endDate}
         </span>
       </div>
 
-      <p className="text-gray-600 mb-4">{trip.description}</p>
+      <p className="text-gray-600 mb-4">
+        {trip?.description || "No description available"}
+      </p>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center -space-x-2">
-          {trip.memberDetails.slice(0, 3).map((member, i) => (
+          {memberDetails.slice(0, 3).map((member, i) => (
             <div
-              key={member.id}
+              key={member.id || i}
               className="w-8 h-8 rounded-full bg-purple-100 border-2 border-white flex items-center justify-center"
             >
               <span className="text-sm text-purple-600 font-medium">
-                {member.name.charAt(0)}
+                {(member.name || "?").charAt(0)}
               </span>
             </div>
           ))}
-          {trip.members > 3 && (
+          {memberCount > 3 && (
             <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center">
               <span className="text-sm text-gray-600 font-medium">
-                +{trip.members - 3}
+                +{memberCount - 3}
               </span>
             </div>
           )}
