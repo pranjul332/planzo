@@ -10,22 +10,30 @@ import TripsPage from './Pages/MyTripPage/TripPage';
 import { Auth0Provider } from "@auth0/auth0-react";
 import { AuthProvider } from './Auth/AuthContext';
 
+// Make sure these environment variables are correctly set
+console.log("Auth0 Domain:", process.env.REACT_APP_AUTH0_DOMAIN);
+console.log("Auth0 Client ID:", process.env.REACT_APP_AUTH0_CLIENT_ID);
+console.log("Auth0 Audience:", process.env.REACT_APP_AUTH0_AUDIENCE);
+
 const root = ReactDOM.createRoot(document.getElementById('root')); 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Auth0Provider
-        domain="dev-o12o1p7fhpbr5soe.us.auth0.com"
-        clientId="rTSmiXDjsJNmPu4OOtOpHzp10dEM6q0O"
-        authorizationParams={{
-          redirect_uri: window.location.origin,
-        }}
-        cacheLocation="localstorage"
-      >
-        <App />
-      </Auth0Provider>
-      {/* <TripsPage/> */}
-    </BrowserRouter>
+    <Auth0Provider
+      domain={process.env.REACT_APP_AUTH0_DOMAIN}
+      clientId={process.env.REACT_APP_AUTH0_CLIENT_ID}
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+        audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+        scope:
+          "openid profile email create:trips read:trips update:trips delete:trips",
+      }}
+    >
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </Auth0Provider>
   </React.StrictMode>
 );
 

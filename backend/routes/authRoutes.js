@@ -1,9 +1,6 @@
-const jwt = require("jsonwebtoken");
-const express = require("express");
 
-const { body, validationResult } = require("express-validator");
+const express = require("express");
 const User = require("../db/schema/User");
-const { checkJwt } = require("../middleware");
 const router = express.Router();
 
 // Auth0 user creation or login

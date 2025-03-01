@@ -2,7 +2,7 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const User = require("../db/schema/User");
-const { checkJwt } = require("../middleware");
+const { checkJwt } = require("../middlewar");
 const router = express.Router();
 
 // Custom middleware to verify local JWT

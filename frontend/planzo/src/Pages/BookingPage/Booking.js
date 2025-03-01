@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import axios from "axios";
+import { useTripService } from "../../services/tripService";
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,12 +11,24 @@ import {
   Map,
   Palette,
   Info,
-  BrainCircuit, // AI-themed icon
+  BrainCircuit,
+  Plane,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import CreateTripModal from "../MyTripPage/CreateTrip";
 
 const Booking = () => {
+  const { getAccessTokenSilently } = useAuth0();
+  const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isCreateTripModalOpen, setIsCreateTripModalOpen] = useState(false);
+   const { createTrip } = useTripService();
+
+  // Destination data that will come from API later
+  const destinationData = {
+    name: "Leh & Nubra Valley, A Dream Destination",
+    cost: 25734,
+  };
 
   const images = [
     "/api/placeholder/1200/600",
@@ -37,6 +52,25 @@ const Booking = () => {
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
+  // In Booking.js
+  const handleCreateTrip = async (newTrip) => {
+    try {
+      console.log("🚀 Sending trip data to API:", newTrip); // Debugging
+
+      const createdTrip = await createTrip(newTrip);
+
+      console.log("✅ Trip Created:", createdTrip);
+      navigate("/trip/ManageTrip");
+    } catch (error) {
+      console.error("❌ Error creating trip:", error);
+    }
+  };
+
+
+  const handlePlanNow = () => {
+    setIsCreateTripModalOpen(true);
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-4">
       {/* Breadcrumb */}
@@ -49,7 +83,7 @@ const Booking = () => {
           Holidays
         </Link>{" "}
         {" > "}
-        <span>Leh & Nubra Valley, A Dream Destination</span>
+        <span>{destinationData.name}</span>
       </div>
 
       {/* Main Content */}
@@ -57,7 +91,7 @@ const Booking = () => {
         {/* Left Column */}
         <div className="lg:w-3/4">
           <h1 className="text-2xl font-semibold mb-4">
-            Leh & Nubra Valley, A Dream Destination
+            {destinationData.name}
           </h1>
 
           {/* Tabs */}
@@ -164,20 +198,23 @@ const Booking = () => {
                     </div>
                   </div>
                 </div>
-                <div className="text-2xl font-bold">₹25,734</div>
+                <div className="text-2xl font-bold">
+                  ₹{destinationData.cost}
+                </div>
               </div>
               <button className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-500 text-white text-sm px-3 py-2 rounded-lg hover:from-purple-700 hover:to-blue-600 transition-all lg:text-xsm lg:px-2 lg:gap-2 lg:rounded-xl">
-                <BrainCircuit className="h-4 w-4" /> {/* AI-themed icon */}
+                <BrainCircuit className="h-4 w-4" />
                 <span>Plan with AI</span>
               </button>
             </div>
 
             {/* Plan Now and Contact Seller Buttons */}
-            <Link to="/trip/ManageTrip">
-              <button className="w-full bg-red-600 text-white py-2 rounded mb-2">
-                Plan Now
-              </button>
-            </Link>
+            <button
+              onClick={handlePlanNow}
+              className="w-full bg-red-600 text-white py-2 rounded mb-2"
+            >
+              Plan Now
+            </button>
             <button className="w-full bg-gray-800 text-white py-2 rounded">
               Contact Seller
             </button>
@@ -203,6 +240,18 @@ const Booking = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Trip Modal */}
+      <CreateTripModal
+        isOpen={isCreateTripModalOpen}
+        onClose={() => setIsCreateTripModalOpen(false)}
+        onCreateTrip={handleCreateTrip}
+        initialData={{
+          name:destinationData.name,
+          mainDestination: destinationData.name,
+          budget: destinationData.cost,
+        }}
+      />
     </div>
   );
 };

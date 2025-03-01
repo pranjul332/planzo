@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Plus,
@@ -10,15 +10,27 @@ import {
   Users,
   Send,
 } from "lucide-react";
+import { useTripService } from "../../services/tripService";
+import { useAuth0 } from "@auth0/auth0-react";
 
-const CreateTripModal = ({ isOpen, onClose, onCreateTrip }) => {
+const CreateTripModal = ({
+  isOpen,
+  onClose,
+  onCreateTrip,
+  initialData,
+}) => {
+  const { isAuthenticated } = useAuth0();
+  const { createTrip } = useTripService();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
   const [tripData, setTripData] = useState({
     name: "",
     mainDestination: "",
     startDate: "",
     endDate: "",
     description: "",
-    budget: "",
+    budget: initialData?.budget || "",
     members: [],
   });
 
@@ -26,6 +38,23 @@ const CreateTripModal = ({ isOpen, onClose, onCreateTrip }) => {
     name: "",
     role: "Member",
   });
+
+  // Apply initial data when modal opens or initialData changes
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setTripData((prev) => ({
+        ...prev,
+        mainDestination: initialData.mainDestination || prev.mainDestination,
+        budget: initialData.budget || prev.budget,
+        name: initialData.mainDestination
+          ? `Trip to ${initialData.mainDestination}`
+          : prev.name,
+      }));
+    }
+
+    // Reset error state when modal opens/closes
+    setError(null);
+  }, [isOpen, initialData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -52,15 +81,47 @@ const CreateTripModal = ({ isOpen, onClose, onCreateTrip }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onCreateTrip({
-      ...tripData,
-      id: Date.now(),
-      currentSpent: 0,
-      expenses: [],
-    });
-    onClose();
+
+    if (!isAuthenticated) {
+      setError("You must be logged in to create a trip");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+
+      // Prepare data for API - clean up member IDs which are just for UI
+      const apiTripData = {
+        ...tripData,
+        members: tripData.members.map(({ name, role }) => ({ name, role })),
+      };
+
+      // Call backend API
+      const createdTrip = await createTrip(apiTripData);
+
+      // Call parent component callback with the created trip
+      onCreateTrip(createdTrip);
+
+      // Reset form
+      setTripData({
+        name: "",
+        mainDestination: "",
+        startDate: "",
+        endDate: "",
+        description: "",
+        budget: "",
+        members: [],
+      });
+
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to create trip. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -83,6 +144,12 @@ const CreateTripModal = ({ isOpen, onClose, onCreateTrip }) => {
             Let's Plan Your Adventure! ✨
           </h2>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl border border-red-100">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-5">
@@ -233,15 +300,25 @@ const CreateTripModal = ({ isOpen, onClose, onCreateTrip }) => {
               type="button"
               onClick={onClose}
               className="px-6 py-2.5 text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors duration-200"
+              disabled={isSubmitting}
             >
               Maybe Later
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2"
+              className={`px-6 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2 ${
+                isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+              disabled={isSubmitting}
             >
-              <Plane className="w-5 h-5" />
-              Start Adventure!
+              {isSubmitting ? (
+                <span className="animate-pulse">Processing...</span>
+              ) : (
+                <>
+                  <Plane className="w-5 h-5" />
+                  Start Adventure!
+                </>
+              )}
             </button>
           </div>
         </form>
