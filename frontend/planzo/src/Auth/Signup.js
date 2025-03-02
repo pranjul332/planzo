@@ -14,10 +14,21 @@ const SignUp = () => {
       if (user) {
         setIsSaving(true);
         try {
-          await axios.post("http://localhost:5000/api/users/save", user);
+           const userData = {
+             email: user.email,
+             name: user.name,
+             picture: user.picture,
+             sub: user.sub,
+           };
+          console.log("Sending user data:", userData); // Add this line to see the complete data
+          await axios.post("http://localhost:5000/api/users", userData);
           console.log("User details saved");
         } catch (error) {
           console.error("Error saving user details:", error);
+          // Log the specific error response data
+          if (error.response) {
+            console.error("Error response data:", error.response.data);
+          }
         } finally {
           setIsSaving(false);
         }
@@ -35,6 +46,7 @@ const SignUp = () => {
       prompt: "login",
       connection: "your-connection-name", // Specify your main connection
       ui_locales: "en",
+      scope: "openid profile email",
     });
   };
 
@@ -66,6 +78,8 @@ const SignUp = () => {
               loginWithRedirect({
                 prompt: "login",
                 connection: "your-connection-name", // Specify your main connection
+                ui_locales: "en",
+                scope: "openid profile email",
               })
             }
             className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"

@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     const getToken = async () => {
       if (isAuthenticated) {
         try {
-          // console.log("Getting access token...");
+          console.log("Getting access token...");
           const token = await getAccessTokenSilently({
             authorizationParams: {
               audience: process.env.REACT_APP_AUTH0_AUDIENCE,

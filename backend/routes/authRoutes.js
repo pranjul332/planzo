@@ -4,7 +4,7 @@ const User = require("../db/schema/User");
 const router = express.Router();
 
 // Auth0 user creation or login
-router.post("/save", async (req, res) => {
+router.post("/", async (req, res) => {
   // Destructure email, name, picture and sub from req.body
   const { email, name, picture, sub } = req.body;
   console.log(req.body);
