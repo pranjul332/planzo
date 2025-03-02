@@ -13,11 +13,11 @@ const checkJwt = auth({
 
 
 const authMiddleware = (req, res, next) => {
-  console.log("Auth headers:", req.headers.authorization);
+//   console.log("Auth headers:", req.headers.authorization);
 
   // Debugging environment variables
-  console.log("Auth0 Domain:", process.env.AUTH0_DOMAIN);
-  console.log("Auth0 Audience:", process.env.AUTH0_AUDIENCE);
+//   console.log("Auth0 Domain:", process.env.AUTH0_DOMAIN);
+//   console.log("Auth0 Audience:", process.env.AUTH0_AUDIENCE);
 
   // Apply the JWT check
   checkJwt(req, res, (err) => {
@@ -28,7 +28,7 @@ const authMiddleware = (req, res, next) => {
         .json({ message: "Unauthorized", error: err.message });
     }
 
-    console.log("Auth object:", req.auth);
+    // console.log("Auth object:", req.auth);
 
     if (!req.auth) {
       console.error("req.auth is undefined or null");
@@ -46,7 +46,7 @@ const authMiddleware = (req, res, next) => {
 
     // Set user ID from the 'sub' claim
     req.userId = req.auth.payload.sub;
-    console.log("User ID set to:", req.userId); 
+    // console.log("User ID set to:", req.userId); 
 
     next();
   });

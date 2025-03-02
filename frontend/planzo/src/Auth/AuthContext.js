@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     const getToken = async () => {
       if (isAuthenticated) {
         try {
-          console.log("Getting access token...");
+          // console.log("Getting access token...");
           const token = await getAccessTokenSilently({
             authorizationParams: {
               audience: process.env.REACT_APP_AUTH0_AUDIENCE,
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
                 " create:trips read:trips update:trips delete:trips ",
             },
           });
-          console.log("Token received:", token ? "Token received" : "No token");
+          // console.log("Token received:", token ? "Token received" : "No token");
           setAuthToken(token);
         } catch (error) {
           console.error("Error getting token:", error);

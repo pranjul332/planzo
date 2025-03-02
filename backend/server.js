@@ -16,8 +16,8 @@ dotenv.config();
 
 const app = express();
 
-console.log("Backend AUTH0_AUDIENCE:", process.env.AUTH0_AUDIENCE);
-console.log("Backend AUTH0_DOMAIN:", process.env.AUTH0_DOMAIN);
+// console.log("Backend AUTH0_AUDIENCE:", process.env.AUTH0_AUDIENCE);
+// console.log("Backend AUTH0_DOMAIN:", process.env.AUTH0_DOMAIN);
 
 app.use(cors());
 app.use(express.json());

@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import axios from "axios";
 import { useTripService } from "../../services/tripService";
 import {
   ChevronLeft,
@@ -18,12 +17,9 @@ import { Link, useNavigate } from "react-router-dom";
 import CreateTripModal from "../MyTripPage/CreateTrip";
 
 const Booking = () => {
-  const { getAccessTokenSilently } = useAuth0();
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isCreateTripModalOpen, setIsCreateTripModalOpen] = useState(false);
-  // We'll use the tripService here but be careful not to create the trip twice
-  const { createTrip } = useTripService();
 
   // Destination data that will come from API later
   const destinationData = {
@@ -53,8 +49,7 @@ const Booking = () => {
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  // This is the key fix - we're no longer creating a trip here,
-  // just navigating after the modal has completed its work
+  // This function will be called after the trip is created in the modal
   const handleCreateTrip = async (createdTrip) => {
     try {
       console.log("✅ Trip Created:", createdTrip);
@@ -71,7 +66,6 @@ const Booking = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4">
-      {/* Rest of the component stays the same */}
       {/* Breadcrumb */}
       <div className="text-sm mb-4">
         <Link to="/" className="text-blue-600">

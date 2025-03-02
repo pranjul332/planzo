@@ -1,25 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  User,
-  Plus,
-  Search,
-  X,
-  Plane,
-  MapPin,
-  Calendar,
-  Palmtree,
-  Heart,
-  Sunrise,
-  Moon,
-  Cloud,
-  Rainbow,
-} from "lucide-react";
+import { User, Plus, Search, Plane, Palmtree, Rainbow } from "lucide-react";
 import Sidebar from "./Sidebar";
 import TripCard from "./TripCard";
 import TripDetails from "./TripDetails";
 import AddMemberModal from "./AddMemberModal";
 import CreateTripModal from "./CreateTrip";
-import { useTripService } from "../../services/tripService"; // Import the hook
+import { useTripService } from "../../services/tripService";
 
 const EmptyState = () => (
   <div className="text-center py-16">
@@ -49,11 +35,6 @@ const WelcomeBanner = () => (
   </div>
 );
 
-const WeatherIcon = ({ time }) => {
-  if (time === "day") return <Sunrise className="w-6 h-6" />;
-  return <Moon className="w-6 h-6" />;
-};
-
 const TripsPage = () => {
   const [isCreateTripModalOpen, setIsCreateTripModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -64,7 +45,7 @@ const TripsPage = () => {
   const [error, setError] = useState(null);
 
   // Get tripService methods from the hook
-  const { createTrip, getTrips, getTripById } = useTripService();
+  const { getTrips, getTripById } = useTripService();
 
   // Fetch trips on component mount
   useEffect(() => {
@@ -108,77 +89,53 @@ const TripsPage = () => {
     }
   };
 
- const handleTripClick = async (trip) => {
-   try {
-     // Get detailed trip information when a trip is clicked
-     const detailedTrip = await getTripById(trip.id);
-
-     // Format the detailed trip data
-     const formattedTrip = {
-       id: detailedTrip.id,
-       name: detailedTrip.name || "Unnamed Trip",
-       description: detailedTrip.description || "",
-       members: detailedTrip.members || 0,
-       mainDestination: detailedTrip.mainDestination || "",
-       // Ensure dates object exists
-       dates: {
-         start: detailedTrip.dates?.start || null,
-         end: detailedTrip.dates?.end || null,
-       },
-       // Add other properties with fallbacks
-       budget: detailedTrip.budget || 0,
-       currentSpent: detailedTrip.currentSpent || 0,
-       memberDetails: detailedTrip.memberDetails || [],
-       expenses: detailedTrip.expenses || [],
-       sideDestinations: detailedTrip.sideDestinations || [],
-       summary: detailedTrip.summary || detailedTrip.description || "",
-     };
-
-     setSelectedTrip(formattedTrip);
-   } catch (err) {
-     console.error("Failed to fetch trip details:", err);
-     // Fallback to using the basic trip data if detailed fetch fails
-     // Make sure this trip data is also properly formatted
-     const formattedFallbackTrip = {
-       ...trip,
-       dates: trip.dates || { start: null, end: null },
-       memberDetails: trip.memberDetails || [],
-       expenses: trip.expenses || [],
-       sideDestinations: trip.sideDestinations || [],
-     };
-     setSelectedTrip(formattedFallbackTrip);
-   }
- };
-
-  // Updated to use the API service
-  const handleCreateTrip = async (newTripData) => {
+  const handleTripClick = async (trip) => {
     try {
-      // Format trip data as needed for your API
+      // Get detailed trip information when a trip is clicked
+      const detailedTrip = await getTripById(trip.id);
+
+      // Format the detailed trip data
       const formattedTrip = {
-        name: newTripData.name,
-        description: newTripData.description,
-        mainDestination: newTripData.mainDestination,
-        budget: parseInt(newTripData.budget),
-        startDate: newTripData.startDate, // Fix this
-        endDate: newTripData.endDate, // Fix this
-        members: newTripData.members.map((member) => ({
-          name: member.name,
-          role: member.role,
-        })),
+        id: detailedTrip.id,
+        name: detailedTrip.name || "Unnamed Trip",
+        description: detailedTrip.description || "",
+        members: detailedTrip.members || 0,
+        mainDestination: detailedTrip.mainDestination || "",
+        // Ensure dates object exists
+        dates: {
+          start: detailedTrip.dates?.start || null,
+          end: detailedTrip.dates?.end || null,
+        },
+        // Add other properties with fallbacks
+        budget: detailedTrip.budget || 0,
+        currentSpent: detailedTrip.currentSpent || 0,
+        memberDetails: detailedTrip.memberDetails || [],
+        expenses: detailedTrip.expenses || [],
+        sideDestinations: detailedTrip.sideDestinations || [],
+        summary: detailedTrip.summary || detailedTrip.description || "",
       };
 
-      // Create trip via API
-      await createTrip(formattedTrip);
-
-      // Refresh trips list
-      fetchTrips();
-
-      // Close modal
-      setIsCreateTripModalOpen(false);
+      setSelectedTrip(formattedTrip);
     } catch (err) {
-      console.error("Failed to create trip:", err);
-      alert("Failed to create trip. Please try again later.");
+      console.error("Failed to fetch trip details:", err);
+      // Fallback to using the basic trip data if detailed fetch fails
+      // Make sure this trip data is also properly formatted
+      const formattedFallbackTrip = {
+        ...trip,
+        dates: trip.dates || { start: null, end: null },
+        memberDetails: trip.memberDetails || [],
+        expenses: trip.expenses || [],
+        sideDestinations: trip.sideDestinations || [],
+      };
+      setSelectedTrip(formattedFallbackTrip);
     }
+  };
+
+  // Handle trip creation - this will be called by the modal
+  const handleCreateTrip = async () => {
+    // Simply refresh the trips list after creation
+    await fetchTrips();
+    setIsCreateTripModalOpen(false);
   };
 
   const handleAddMember = async (newMember) => {

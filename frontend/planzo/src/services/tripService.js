@@ -4,56 +4,77 @@ import axios from "axios";
 export const useTripService = () => {
   const { getAccessTokenSilently } = useAuth0();
 
+  // Cache to track pending requests
+  const pendingRequests = new Map();
+
   const createTrip = async (tripData) => {
-    try {
-      // Get access token with the correct audience and scope
-      const token = await getAccessTokenSilently({
-        authorizationParams: {
-          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
-          scope: "create:trips",
-        },
-      });
+    // Create a unique key based on the operation and data
+    const requestKey = `create_trip_${JSON.stringify(tripData)}`;
 
-      console.log("Token obtained for API call");
-
-      // Adding a timestamp or request ID can help identify duplicate requests
-      const requestData = {
-        ...tripData,
-        requestId: `req_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`,
-      };
-
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/trips`,
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      return response.data;
-    } catch (error) {
-      console.error("Error creating trip:", error);
-      // More detailed error handling
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        console.error("Response error:", error.response.data);
-        throw new Error(error.response.data.message || "Failed to create trip");
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("Request error:", error.request);
-        throw new Error("No response from server. Check your connection.");
-      } else {
-        // Something happened in setting up the request
-        throw error;
-      }
+    // Check if this exact request is already in progress
+    if (pendingRequests.has(requestKey)) {
+      console.log("Duplicate request detected, returning existing promise");
+      return pendingRequests.get(requestKey);
     }
+
+    // Create the promise for this request
+    const requestPromise = (async () => {
+      try {
+        console.log("Creating trip with request ID:", tripData.requestId);
+
+        // Get access token with the correct audience and scope
+        const token = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+            scope: "create:trips",
+          },
+        });
+
+        const response = await axios.post(
+          `${
+            process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+          }/trips`,
+          tripData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "Idempotency-Key": tripData.requestId, // Add idempotency key header
+            },
+          }
+        );
+
+        return response.data;
+      } catch (error) {
+        console.error("Error creating trip:", error);
+
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          console.error("Response error:", error.response.data);
+          throw new Error(
+            error.response.data.message || "Failed to create trip"
+          );
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error("Request error:", error.request);
+          throw new Error("No response from server. Check your connection.");
+        } else {
+          // Something happened in setting up the request
+          throw error;
+        }
+      } finally {
+        // Remove this request from the pending map when done
+        pendingRequests.delete(requestKey);
+      }
+    })();
+
+    // Store the promise in our pending requests map
+    pendingRequests.set(requestKey, requestPromise);
+
+    // Return the promise
+    return requestPromise;
   };
 
-  // Other methods with the same pattern
   const getTrips = async () => {
     try {
       const token = await getAccessTokenSilently({
@@ -63,11 +84,14 @@ export const useTripService = () => {
         },
       });
 
-      const response = await fetch("http://localhost:5000/api/trips", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/trips`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -97,9 +121,10 @@ export const useTripService = () => {
         },
       });
 
-      // Fix: Add slash before tripId
       const response = await fetch(
-        `http://localhost:5000/api/trips/${tripId}`,
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/trips/${tripId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

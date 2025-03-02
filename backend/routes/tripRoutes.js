@@ -38,6 +38,8 @@ router.post("/", async (req, res) => {
   try {
     const { name, mainDestination, startDate, endDate, activities, notes, members, requestId } = req.body;
 
+    console.log("🔹 Incoming trip creation request:", req.body);
+
     // Check if we've already processed this request
     if (requestId) {
       const existingTrip = await Trip.findOne({ 
