@@ -29,8 +29,8 @@ const tripSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    description: String,
-    budget: Number,
+    description: {type: String},
+    budget: {type: Number},
     members: [memberSchema], // Corrected to use memberSchema instead of an array of strings
     auth0Id: {
       type: String,

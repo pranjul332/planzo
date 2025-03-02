@@ -36,7 +36,7 @@ router.get("/:id", async (req, res) => {
 // Create a new trip with duplicate prevention
 router.post("/", async (req, res) => {
   try {
-    const { name, mainDestination, startDate, endDate, activities, notes, members, requestId } = req.body;
+    const { name, mainDestination, startDate, endDate, activities, notes, members, requestId ,description,budget } = req.body;
 
     console.log("🔹 Incoming trip creation request:", req.body);
 
@@ -60,6 +60,8 @@ router.post("/", async (req, res) => {
       endDate,
       activities,
       notes,
+      description,
+      budget,
       members,
       requestId, // Store the request ID to detect duplicates
       auth0Id: req.userId, // Store Auth0 ID instead of MongoDB user ID

@@ -57,7 +57,7 @@ const TripsPage = () => {
     try {
       setLoading(true);
       const fetchedTrips = await getTrips();
-
+      console.log(fetchedTrips)
       // Format the trips data to ensure consistent structure
       const formattedTrips = fetchedTrips.map((trip) => ({
         id: trip.id,
