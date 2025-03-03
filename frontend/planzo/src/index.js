@@ -9,6 +9,7 @@ import Bus from './Pages/HomePage/Bus';
 import TripsPage from './Pages/MyTripPage/TripPage';
 import { Auth0Provider } from "@auth0/auth0-react";
 import { AuthProvider } from './Auth/AuthContext';
+import TripDetails from './Pages/MyTripPage/TripDetails';
 
 // Make sure these environment variables are correctly set
 console.log("Auth0 Domain:", process.env.REACT_APP_AUTH0_DOMAIN);
@@ -32,6 +33,7 @@ root.render(
       <BrowserRouter>
         <AuthProvider>
           <App />
+          {/* <TripDetails/> */}
         </AuthProvider>
       </BrowserRouter>
     </Auth0Provider>

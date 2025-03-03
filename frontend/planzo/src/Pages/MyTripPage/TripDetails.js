@@ -27,6 +27,81 @@ import TripFlowGraph from "./TripFlowGraph";
 const TripDetails = ({ trip, onClose, onAddMember }) => {
   const [showTripGraph, setShowTripGraph] = useState(false);
 
+  // Format date with fallback for missing or invalid dates
+  const formatDate = (dateString) => {
+    if (!dateString) return "TBD";
+
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "TBD";
+    }
+  };
+
+  // Ensure that trip.memberDetails is always an array and each member has the required properties
+  const safeMembers = Array.isArray(trip.memberDetails)
+    ? trip.memberDetails.map((member) => {
+        if (typeof member === "object" && member !== null) {
+          return {
+            id:
+              member.id ||
+              member._id ||
+              `member-${Math.random().toString(36).substr(2, 9)}`,
+            name:
+              typeof member.name === "string" ? member.name : "Unknown Member",
+            role: typeof member.role === "string" ? member.role : "Member",
+          };
+        }
+        return {
+          id: `member-${Math.random().toString(36).substr(2, 9)}`,
+          name: "Unknown Member",
+          role: "Member",
+        };
+      })
+    : [];
+
+  // Ensure side destinations is always an array of strings
+  const safeSideDestinations = Array.isArray(trip.sideDestinations)
+    ? trip.sideDestinations.map((dest) =>
+        typeof dest === "string" ? dest : JSON.stringify(dest)
+      )
+    : [];
+
+  // Ensure expenses is always an array with valid structure for the chart
+  const safeExpenses = Array.isArray(trip.expenses)
+    ? trip.expenses.map((expense) => {
+        if (typeof expense === "object" && expense !== null) {
+          return {
+            category:
+              typeof expense.category === "string"
+                ? expense.category
+                : "Miscellaneous",
+            amount: typeof expense.amount === "number" ? expense.amount : 0,
+          };
+        }
+        return { category: "Miscellaneous", amount: 0 };
+      })
+    : [];
+
+  // Create a safe trip object with all necessary properties
+  const safeTrip = {
+    ...trip,
+    name: trip.name || "Unnamed Trip",
+    summary: trip.summary || "",
+    mainDestination: trip.mainDestination || "No destination set",
+    sideDestinations: safeSideDestinations,
+    expenses: safeExpenses,
+    budget: typeof trip.budget === "number" ? trip.budget : 0,
+    currentSpent: typeof trip.currentSpent === "number" ? trip.currentSpent : 0,
+    dates: {
+      start: trip.dates?.start || null,
+      end: trip.dates?.end || null,
+    },
+    members:
+      typeof trip.members === "number" ? trip.members : safeMembers.length,
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header Card */}
@@ -35,8 +110,10 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
           {/* Top Row */}
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">{trip.name}</h1>
-              <p className="text-gray-600 mt-2 text-lg">{trip.summary}</p>
+              <h1 className="text-3xl font-bold text-gray-800">
+                {safeTrip.name}
+              </h1>
+              <p className="text-gray-600 mt-2 text-lg">{safeTrip.summary}</p>
             </div>
             <button
               onClick={onClose}
@@ -65,7 +142,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
           {/* Trip Flow Graph */}
           {showTripGraph && (
             <div className="mt-4 bg-gray-50 rounded-xl p-6">
-              <TripFlowGraph trip={trip} />
+              <TripFlowGraph trip={safeTrip} />
             </div>
           )}
         </div>
@@ -86,11 +163,11 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                 <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                   <div className="flex items-center gap-3 text-purple-600 font-medium text-lg">
                     <MapPin className="w-6 h-6" />
-                    Main: {trip.mainDestination}
+                    Main: {safeTrip.mainDestination}
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {trip.sideDestinations.map((dest, index) => (
+                  {safeSideDestinations.map((dest, index) => (
                     <div
                       key={index}
                       className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
@@ -110,7 +187,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
               </h2>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={trip.expenses}>
+                  <LineChart data={safeExpenses}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                     <XAxis dataKey="category" stroke="#6B7280" />
                     <YAxis stroke="#6B7280" />
@@ -140,13 +217,13 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                 <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                   <span className="text-gray-600 text-lg">Total Budget</span>
                   <p className="text-3xl font-semibold text-gray-800 mt-2">
-                    ${trip.budget.toLocaleString()}
+                    ${safeTrip.budget.toLocaleString()}
                   </p>
                 </div>
                 <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                   <span className="text-gray-600 text-lg">Spent</span>
                   <p className="text-3xl font-semibold text-purple-600 mt-2">
-                    ${trip.currentSpent.toLocaleString()}
+                    ${safeTrip.currentSpent.toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -162,13 +239,15 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                 <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-gray-100">
                   <Calendar className="w-6 h-6 text-purple-600" />
                   <span className="text-gray-700">
-                    {new Date(trip.dates.start).toLocaleDateString()} -{" "}
-                    {new Date(trip.dates.end).toLocaleDateString()}
+                    {formatDate(safeTrip.dates.start)} -{" "}
+                    {formatDate(safeTrip.dates.end)}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-gray-100">
                   <Users className="w-6 h-6 text-purple-600" />
-                  <span className="text-gray-700">{trip.members} members</span>
+                  <span className="text-gray-700">
+                    {safeTrip.members} members
+                  </span>
                 </div>
               </div>
             </div>
@@ -189,7 +268,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                 </button>
               </div>
               <div className="space-y-4">
-                {trip.memberDetails.map((member) => (
+                {safeMembers.map((member) => (
                   <div
                     key={member.id}
                     className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-100 hover:shadow-md transition-shadow"
@@ -210,10 +289,10 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
 
             {/* Chat Button */}
             <Link to="/chat/chatname">
-            <button className="w-full bg-purple-600 text-white rounded-xl py-4 px-6 flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors text-lg font-medium shadow-sm">
-              <MessageCircle className="w-6 h-6" />
-              Start Group Chat
-            </button>
+              <button className="w-full bg-purple-600 text-white rounded-xl py-4 px-6 flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors text-lg font-medium shadow-sm">
+                <MessageCircle className="w-6 h-6" />
+                Start Group Chat
+              </button>
             </Link>
           </div>
         </div>

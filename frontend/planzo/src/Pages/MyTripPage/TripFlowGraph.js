@@ -1,7 +1,33 @@
 import React from "react";
-import { motion } from "lucide-react";
 
 const TripFlowGraph = ({ trip }) => {
+  // Make sure trip and its properties exist before accessing them
+  const safeTrip = {
+    mainDestination: trip?.mainDestination || "Main Destination",
+    sideDestinations: Array.isArray(trip?.sideDestinations)
+      ? trip.sideDestinations
+      : [],
+    dates: {
+      start: trip?.dates?.start || new Date().toISOString(),
+      end: trip?.dates?.end || new Date().toISOString(),
+    },
+  };
+
+  // Format date with fallback
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      return "TBD";
+    }
+  };
+
+  // Safely join side destinations as string
+  const sideDestinationsText =
+    safeTrip.sideDestinations
+      .filter((dest) => typeof dest === "string")
+      .join(", ") || "None";
+
   return (
     <div className="bg-white rounded-xl shadow-sm p-8">
       <h2 className="text-xl font-semibold mb-6 text-gray-800">Trip Journey</h2>
@@ -28,7 +54,6 @@ const TripFlowGraph = ({ trip }) => {
             </filter>
           </defs>
 
-         
           {/* Main Connection Path */}
           <path
             d="M200,50 C200,150 220,200 180,250 C160,300 240,350 200,400 C180,450 220,500 200,550"
@@ -64,10 +89,10 @@ const TripFlowGraph = ({ trip }) => {
                 repeatCount="indefinite"
               />
             </circle>
-            <text x="220" y="55" fill="#1E40AF" className="text-sm font-medium">
+            <text x="220" y="55" fill="#1E40AF" fontSize="12" fontWeight="500">
               Departure
-              <tspan x="220" y="70" className="text-xs text-gray-500">
-                {new Date(trip.dates.start).toLocaleDateString()}
+              <tspan x="220" y="70" fill="#6B7280" fontSize="10">
+                {formatDate(safeTrip.dates.start)}
               </tspan>
             </text>
 
@@ -95,15 +120,10 @@ const TripFlowGraph = ({ trip }) => {
                 repeatCount="indefinite"
               />
             </circle>
-            <text
-              x="230"
-              y="395"
-              fill="#1E40AF"
-              className="text-sm font-medium"
-            >
+            <text x="230" y="395" fill="#1E40AF" fontSize="12" fontWeight="500">
               Side Trips
-              <tspan x="230" y="410" className="text-xs text-gray-500">
-                {trip.sideDestinations.join(", ")}
+              <tspan x="230" y="410" fill="#6B7280" fontSize="10">
+                {sideDestinationsText}
               </tspan>
             </text>
 
@@ -131,14 +151,9 @@ const TripFlowGraph = ({ trip }) => {
                 repeatCount="indefinite"
               />
             </circle>
-            <text
-              x="210"
-              y="245"
-              fill="#1E40AF"
-              className="text-sm font-medium"
-            >
-              {trip.mainDestination}
-              <tspan x="210" y="260" className="text-xs text-gray-500">
+            <text x="210" y="245" fill="#1E40AF" fontSize="12" fontWeight="500">
+              {safeTrip.mainDestination}
+              <tspan x="210" y="260" fill="#6B7280" fontSize="10">
                 Main Destination
               </tspan>
             </text>
@@ -167,15 +182,10 @@ const TripFlowGraph = ({ trip }) => {
                 repeatCount="indefinite"
               />
             </circle>
-            <text
-              x="220"
-              y="555"
-              fill="#1E40AF"
-              className="text-sm font-medium"
-            >
+            <text x="220" y="555" fill="#1E40AF" fontSize="12" fontWeight="500">
               Return
-              <tspan x="220" y="570" className="text-xs text-gray-500">
-                {new Date(trip.dates.end).toLocaleDateString()}
+              <tspan x="220" y="570" fill="#6B7280" fontSize="10">
+                {formatDate(safeTrip.dates.end)}
               </tspan>
             </text>
           </g>
