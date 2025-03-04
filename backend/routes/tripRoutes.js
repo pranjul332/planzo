@@ -1,86 +1,106 @@
-// routes/tripRoutes.js
 const express = require("express");
 const router = express.Router();
 const Trip = require("../db/schema/Trips");
+const { v4: uuidv4 } = require("uuid");
 
 // Get all trips for the current user
 router.get("/", async (req, res) => {
   try {
-    // req.userId now contains the Auth0 ID (sub) from the token
     const trips = await Trip.find({ auth0Id: req.userId });
-    res.json(trips);
+    res.json(
+      trips.map((trip) => ({
+        ...trip.toObject(),
+        id: trip.tripId, // Ensure frontend gets the unique tripId
+      }))
+    );
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
 // Get a specific trip
-router.get("/:id", async (req, res) => {
+router.get("/:tripId", async (req, res) => {
   try {
     const trip = await Trip.findOne({
-      _id: req.params.id,
-      auth0Id: req.userId, // Ensure user only sees their own trips
+      tripId: req.params.tripId,
+      auth0Id: req.userId,
     });
 
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    res.json(trip);
+    res.json({
+      ...trip.toObject(),
+      id: trip.tripId,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
 // Create a new trip
-// Create a new trip with duplicate prevention
 router.post("/", async (req, res) => {
   try {
-    const { name, mainDestination, startDate, endDate, activities, notes, members, requestId ,description,budget } = req.body;
-
-    console.log("🔹 Incoming trip creation request:", req.body);
-
-    // Check if we've already processed this request
-    if (requestId) {
-      const existingTrip = await Trip.findOne({ 
-        requestId, 
-        auth0Id: req.userId 
-      });
-      
-      if (existingTrip) {
-        console.log("Duplicate request detected, returning existing trip");
-        return res.status(200).json(existingTrip);
-      }
-    }
-
-    const trip = new Trip({
+    const {
       name,
       mainDestination,
       startDate,
       endDate,
-      activities,
-      notes,
       description,
       budget,
       members,
-      requestId, // Store the request ID to detect duplicates
-      auth0Id: req.userId, // Store Auth0 ID instead of MongoDB user ID
+      requestId,
+    } = req.body;
+
+    // Check for duplicate request
+    if (requestId) {
+      const existingTrip = await Trip.findOne({
+        requestId,
+        auth0Id: req.userId,
+      });
+
+      if (existingTrip) {
+        return res.status(200).json({
+          ...existingTrip.toObject(),
+          id: existingTrip.tripId,
+        });
+      }
+    }
+
+    // Generate a new unique tripId
+    const tripId = uuidv4();
+
+    const trip = new Trip({
+      tripId, // Explicitly set the tripId
+      name,
+      mainDestination,
+      startDate,
+      endDate,
+      description,
+      budget,
+      members,
+      requestId,
+      auth0Id: req.userId,
     });
 
     const savedTrip = await trip.save();
-    res.status(201).json(savedTrip);
+
+    res.status(201).json({
+      ...savedTrip.toObject(),
+      id: savedTrip.tripId,
+    });
   } catch (error) {
+    console.error("Trip creation error:", error);
     res.status(500).json({ message: error.message });
   }
 });
-// Update a trip
-router.put("/:id", async (req, res) => {
-  try {
-    const { title, destination, startDate, endDate, activities, notes } =
-      req.body;
 
+// Update a trip
+router.put("/:tripId", async (req, res) => {
+  try {
     const trip = await Trip.findOne({
-      _id: req.params.id,
+      tripId: req.params.tripId,
       auth0Id: req.userId,
     });
 
@@ -88,25 +108,39 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    if (title) trip.title = title;
-    if (destination) trip.destination = destination;
-    if (startDate) trip.startDate = startDate;
-    if (endDate) trip.endDate = endDate;
-    if (activities) trip.activities = activities;
-    if (notes) trip.notes = notes;
+    // Update allowed fields
+    const updateFields = [
+      "name",
+      "mainDestination",
+      "startDate",
+      "endDate",
+      "description",
+      "budget",
+      "members",
+    ];
+
+    updateFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        trip[field] = req.body[field];
+      }
+    });
 
     const updatedTrip = await trip.save();
-    res.json(updatedTrip);
+
+    res.json({
+      ...updatedTrip.toObject(),
+      id: updatedTrip.tripId,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
 // Delete a trip
-router.delete("/:id", async (req, res) => {
+router.delete("/:tripId", async (req, res) => {
   try {
     const trip = await Trip.findOneAndDelete({
-      _id: req.params.id,
+      tripId: req.params.tripId,
       auth0Id: req.userId,
     });
 
@@ -114,7 +148,10 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    res.json({ message: "Trip deleted successfully" });
+    res.json({
+      message: "Trip deleted successfully",
+      id: trip.tripId,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { v4: uuidv4 } = require("uuid");
 
 const memberSchema = new mongoose.Schema({
   name: {
@@ -13,6 +14,14 @@ const memberSchema = new mongoose.Schema({
 
 const tripSchema = new mongoose.Schema(
   {
+    // Add a unique trip ID field
+    tripId: {
+      type: String,
+      default: uuidv4,
+      unique: true,
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: true,
@@ -29,16 +38,29 @@ const tripSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    description: {type: String},
-    budget: {type: Number},
-    members: [memberSchema], // Corrected to use memberSchema instead of an array of strings
+    description: {
+      type: String,
+    },
+    budget: {
+      type: Number,
+    },
+    members: [memberSchema],
     auth0Id: {
       type: String,
-      required: true, // Ensures only the user who created it can modify it
+      required: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
+// Pre-save hook to ensure unique tripId
+tripSchema.pre("save", async function (next) {
+  if (!this.tripId) {
+    this.tripId = uuidv4();
+  }
+  next();
+});
+
 module.exports = mongoose.model("Trip", tripSchema);
- 

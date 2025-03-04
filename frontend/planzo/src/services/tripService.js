@@ -34,12 +34,16 @@ export const useTripService = () => {
           `${
             process.env.REACT_APP_API_URL || "http://localhost:5000/api"
           }/trips`,
-          tripData,
+          {
+            ...tripData,
+            requestId: `req_${Date.now()}_${Math.random()
+              .toString(36)
+              .substr(2, 9)}`,
+          },
           {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
-              "Idempotency-Key": tripData.requestId, // Add idempotency key header
             },
           }
         );
@@ -75,6 +79,7 @@ export const useTripService = () => {
     return requestPromise;
   };
 
+  // Other methods remain the same, just ensure you're using the returned 'id'
   const getTrips = async () => {
     try {
       const token = await getAccessTokenSilently({
