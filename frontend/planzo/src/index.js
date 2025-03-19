@@ -26,9 +26,10 @@ root.render(
         redirect_uri: window.location.origin,
         audience: process.env.REACT_APP_AUTH0_AUDIENCE,
         scope:
-          "create:trips read:trips update:trips delete:trips openid profile email",
+          "create:trips read:trips update:trips delete:trips create:chats read:chats write:chats openid profile email",
       }}
       cacheLocation="localstorage"
+      
     >
       <BrowserRouter>
         <AuthProvider>

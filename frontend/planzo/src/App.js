@@ -35,7 +35,7 @@ const App = () => {
           {/* Protected routes - require authentication */}
           
             <Route path="/holidays/booking" element={<Booking />} />
-            <Route path="/chat/chatname" element={<Chat />} />
+            <Route path="/chat/:chatId" element={<Chat />} />
             <Route path="/trip/ManageTrip" element={<TripsPage />} />
 
             {/* Nested routes inside Layout */}

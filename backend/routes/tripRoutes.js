@@ -64,7 +64,7 @@ router.post("/", async (req, res) => {
         return res.status(200).json({
           ...existingTrip.toObject(),
           id: existingTrip.tripId,
-        });
+        }); 
       }
     }
 

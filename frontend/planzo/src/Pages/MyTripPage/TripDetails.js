@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   MapPin,
@@ -23,9 +23,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import TripFlowGraph from "./TripFlowGraph";
+import { useGroupChatService } from "../../services/chatService";
 
 const TripDetails = ({ trip, onClose, onAddMember }) => {
   const [showTripGraph, setShowTripGraph] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { createGroupChat } = useGroupChatService();
 
   // Format date with fallback for missing or invalid dates
   const formatDate = (dateString) => {
@@ -39,9 +43,25 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
     }
   };
 
+  // Handler for starting a group chat
+  const handleStartGroupChat = async () => {
+    try {
+      setIsLoading(true);
+      // Create a new group chat for this trip
+      const newChat = await createGroupChat(trip.tripId || trip.id || trip._id);
+      // Navigate to the chat screen
+      navigate(`/chat/${newChat.chatId}`);
+    } catch (error) {
+      console.error("Failed to create group chat:", error);
+      alert("Failed to create group chat. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Ensure that trip.memberDetails is always an array and each member has the required properties
-  const safeMembers = Array.isArray(trip.memberDetails)
-    ? trip.memberDetails.map((member) => {
+  const safeMembers = Array.isArray(trip.memberDetails || trip.members)
+    ? (trip.memberDetails || trip.members).map((member) => {
         if (typeof member === "object" && member !== null) {
           return {
             id:
@@ -88,15 +108,15 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
   const safeTrip = {
     ...trip,
     name: trip.name || "Unnamed Trip",
-    summary: trip.summary || "",
+    summary: trip.summary || trip.description || "",
     mainDestination: trip.mainDestination || "No destination set",
     sideDestinations: safeSideDestinations,
     expenses: safeExpenses,
     budget: typeof trip.budget === "number" ? trip.budget : 0,
     currentSpent: typeof trip.currentSpent === "number" ? trip.currentSpent : 0,
     dates: {
-      start: trip.dates?.start || null,
-      end: trip.dates?.end || null,
+      start: trip.dates?.start || trip.startDate || null,
+      end: trip.dates?.end || trip.endDate || null,
     },
     members:
       typeof trip.members === "number" ? trip.members : safeMembers.length,
@@ -288,12 +308,20 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
             </div>
 
             {/* Chat Button */}
-            <Link to="/chat/chatname">
-              <button className="w-full bg-purple-600 text-white rounded-xl py-4 px-6 flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors text-lg font-medium shadow-sm">
-                <MessageCircle className="w-6 h-6" />
-                Start Group Chat
-              </button>
-            </Link>
+            <button
+              onClick={handleStartGroupChat}
+              disabled={isLoading}
+              className="w-full bg-purple-600 text-white rounded-xl py-4 px-6 flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors text-lg font-medium shadow-sm disabled:opacity-70"
+            >
+              {isLoading ? (
+                "Creating chat..."
+              ) : (
+                <>
+                  <MessageCircle className="w-6 h-6" />
+                  Start Group Chat
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

@@ -43,7 +43,8 @@ const authMiddleware = (req, res, next) => {
         .status(401)
         .json({ message: "Invalid token structure - sub claim missing" });
     }
-
+    // console.log(req.auth.payload);
+    
     // Set user ID from the 'sub' claim
     req.userId = req.auth.payload.sub;
     // console.log("User ID set to:", req.userId); 
