@@ -97,6 +97,34 @@ export const useGroupChatService = () => {
     }
   };
 
+  // Find group chat by tripId
+  const getGroupChatByTripId = async (tripId) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+          scope: "read:chats",
+        },
+      });
+
+      const response = await axios.get(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/chats/trip/${tripId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching group chat by trip ID:", error);
+      throw error;
+    }
+  };
+
   // Send a message to a group chat
   const sendMessage = async (chatId, content, attachments = []) => {
     try {
@@ -161,6 +189,7 @@ export const useGroupChatService = () => {
     createGroupChat,
     getGroupChats,
     getGroupChatById,
+    getGroupChatByTripId,
     sendMessage,
     updateGroupChat,
   };

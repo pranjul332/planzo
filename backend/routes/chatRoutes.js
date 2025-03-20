@@ -50,6 +50,29 @@ router.post("/:tripId", async (req, res) => {
   }
 });
 
+// Get group chat by tripId
+router.get("/trip/:tripId", async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const auth0Id = req.userId;
+
+    // Find a group chat associated with the trip where the user is a member
+    const groupChat = await GroupChat.findOne({
+      tripId,
+      "members.auth0Id": auth0Id,
+    });
+
+    if (!groupChat) {
+      return res.status(404).json({ message: "No group chat found for this trip" });
+    }
+
+    res.json(groupChat);
+  } catch (error) {
+    console.error("Error fetching group chat by trip ID:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Get all group chats for a user
 router.get("/", async (req, res) => {
   try {

@@ -29,7 +29,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
   const [showTripGraph, setShowTripGraph] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { createGroupChat } = useGroupChatService();
+  const { createGroupChat, getGroupChatByTripId } = useGroupChatService();
 
   // Format date with fallback for missing or invalid dates
   const formatDate = (dateString) => {
@@ -47,13 +47,32 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
   const handleStartGroupChat = async () => {
     try {
       setIsLoading(true);
-      // Create a new group chat for this trip
+
+      // Try to find an existing chat for this trip first
+      try {
+        const existingChat = await getGroupChatByTripId(
+          trip.tripId || trip.id || trip._id
+        );
+
+        // If we found an existing chat, navigate to it
+        if (existingChat && existingChat.chatId) {
+          navigate(`/chat/${existingChat.chatId}`);
+          return;
+        }
+      } catch (error) {
+        // If error is 404, that means no chat exists yet, which is fine
+        // For other errors, we'll just proceed to create a new chat
+        console.log("No existing chat found, creating a new one");
+      }
+
+      // Create a new group chat for this trip if none exists
       const newChat = await createGroupChat(trip.tripId || trip.id || trip._id);
+
       // Navigate to the chat screen
       navigate(`/chat/${newChat.chatId}`);
     } catch (error) {
-      console.error("Failed to create group chat:", error);
-      alert("Failed to create group chat. Please try again.");
+      console.error("Failed to create/access group chat:", error);
+      alert("Failed to create or access group chat. Please try again.");
     } finally {
       setIsLoading(false);
     }
