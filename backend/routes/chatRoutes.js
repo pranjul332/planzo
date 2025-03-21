@@ -8,7 +8,6 @@ router.post("/:tripId", async (req, res) => {
   try {
     const { tripId } = req.params;
     const auth0Id = req.userId; // Use req.userId set by authMiddleware
-
     // Check if trip exists and user has access
     const trip = await Trip.findOne({ tripId, auth0Id });
     if (!trip) {
