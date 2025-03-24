@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Plane, Bed, Pizza, Ticket, PieChart, DollarSign } from "lucide-react";
+import { useGroupChatService }  from "../../../services/chatService"
+import { useParams } from "react-router-dom";
 
 const TripCost = ({ tripData = {} }) => {
+
+  const { chatId } = useParams();
+  const groupChatService = useGroupChatService();
+
   // Default cost data if none provided
   const defaultCosts = {
     travel: 1200,
@@ -13,6 +19,29 @@ const TripCost = ({ tripData = {} }) => {
   const [costs, setCosts] = useState(tripData.costs || defaultCosts);
   const [editMode, setEditMode] = useState(false);
   const [editedCosts, setEditedCosts] = useState(costs);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchTripCosts = async () => {
+      try {
+        const tripCosts = await groupChatService.getTripCosts(chatId);
+        if (tripCosts && tripCosts.categories.length > 0) {
+          const loadedCosts = tripCosts.categories.reduce((acc, category) => {
+            acc[category.category] = category.amount;
+            return acc;
+          }, {});
+          setCosts(loadedCosts);
+          setEditedCosts(loadedCosts);
+        }
+      } catch (error) {
+        console.error("Error fetching trip costs:", error);
+      }
+    };
+
+    if (chatId) {
+      fetchTripCosts();
+    }
+  }, [chatId]);
 
   const categories = [
     { id: "travel", name: "Travel", icon: Plane, color: "bg-blue-500" },
@@ -33,10 +62,19 @@ const TripCost = ({ tripData = {} }) => {
     return Math.round((value / totalCost) * 100);
   };
 
-  const handleEditToggle = () => {
+  const handleEditToggle = async () => {
     if (editMode) {
       // Save changes
-      setCosts(editedCosts);
+      try {
+        setIsSaving(true);
+        await groupChatService.saveTripCosts(chatId, editedCosts);
+        setCosts(editedCosts);
+      } catch (error) {
+        console.error("Error saving trip costs:", error);
+        // Optionally show error to user
+      } finally {
+        setIsSaving(false);
+      }
     }
     setEditMode(!editMode);
   };

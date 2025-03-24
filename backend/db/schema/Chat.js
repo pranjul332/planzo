@@ -23,6 +23,29 @@ const messageSchema = new mongoose.Schema({
     },
   ],
 });
+
+const tripCostSchema = new mongoose.Schema(
+  {
+    category: {
+      type: String,
+      enum: ["travel", "stay", "food", "activities"],
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    percentage: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+    },
+  },
+  { _id: false }
+);
+
 const groupChatSchema = new mongoose.Schema(
   {
     chatId: {
@@ -94,6 +117,14 @@ const groupChatSchema = new mongoose.Schema(
         },
       },
     ],
+    tripCosts: {
+      categories: [tripCostSchema],
+      totalCost: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+    },
   },
   {
     timestamps: true,

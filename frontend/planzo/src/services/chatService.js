@@ -242,6 +242,65 @@ export const useGroupChatService = () => {
     }
   };
 
+ // Save trip costs for a group chat
+  const saveTripCosts = async (chatId, costs) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+          scope: "write:chats",
+        },
+      });
+
+      const response = await axios.post(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/chats/${chatId}/trip-costs`,
+        { costs },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error saving trip costs:", error);
+      throw error;
+    }
+  };
+
+  // Get trip costs for a group chat
+  const getTripCosts = async (chatId) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+          scope: "read:chats",
+        },
+      });
+
+      const response = await axios.get(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/chats/${chatId}/trip-costs`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching trip costs:", error);
+      throw error;
+    }
+  };
+
+
   return {
     createGroupChat,
     getGroupChats,
@@ -251,5 +310,7 @@ export const useGroupChatService = () => {
     updateGroupChat,
     addDestinations,
     getDestinations,
+    saveTripCosts,
+    getTripCosts,
   };
 };

@@ -237,5 +237,84 @@ router.get('/:chatId/destinations', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+// Save or update trip costs for a group chat
+router.post('/:chatId/trip-costs', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { costs } = req.body;
+    const auth0Id = req.userId;
+
+    // Find the group chat and ensure the user is a member
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res
+        .status(404)
+        .json({ message: "Group chat not found or access denied" });
+    }
+
+    // Validate and transform costs
+    const validCosts = [
+      { category: 'travel', amount: costs.travel || 0 },
+      { category: 'stay', amount: costs.stay || 0 },
+      { category: 'food', amount: costs.food || 0 },
+      { category: 'activities', amount: costs.activities || 0 }
+    ].map(cost => ({
+      ...cost,
+      percentage: Math.round((cost.amount / (costs.travel + costs.stay + costs.food + costs.activities)) * 100) || 0
+    }));
+
+    // Calculate total cost
+    const totalCost = validCosts.reduce((sum, cost) => sum + cost.amount, 0);
+
+    // Update group chat with trip costs
+    groupChat.tripCosts = {
+      categories: validCosts,
+      totalCost
+    };
+
+    await groupChat.save();
+
+    res.status(200).json({
+      message: "Trip costs saved successfully",
+      tripCosts: groupChat.tripCosts
+    });
+  } catch (error) {
+    console.error('Error saving trip costs:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get trip costs for a group chat
+router.get('/:chatId/trip-costs', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const auth0Id = req.userId;
+
+    // Find the group chat and ensure the user is a member
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res
+        .status(404)
+        .json({ message: "Group chat not found or access denied" });
+    }
+
+    // Return trip costs
+    res.status(200).json(groupChat.tripCosts || { 
+      categories: [], 
+      totalCost: 0 
+    });
+  } catch (error) {
+    console.error('Error fetching trip costs:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 
 module.exports = router;
