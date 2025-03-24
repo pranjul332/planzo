@@ -73,6 +73,27 @@ const groupChatSchema = new mongoose.Schema(
         default: "public",
       },
     },
+
+    destinations: [
+      {
+        name: {
+          type: String,
+          required: true,
+        },
+        country: {
+          type: String,
+          required: true,
+        },
+        days: {
+          type: Number,
+          required: true,
+        },
+        attractions: [String],
+        notes: {
+          type: String,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

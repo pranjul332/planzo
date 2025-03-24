@@ -185,6 +185,63 @@ export const useGroupChatService = () => {
     }
   };
 
+  // Add these methods to your existing useGroupChatService hook
+  const addDestinations = async (chatId, destinations) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+          scope: "write:chats",
+        },
+      });
+
+      const response = await axios.post(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/chats/${chatId}/destinations`,
+        { destinations },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error adding destinations:", error);
+      throw error;
+    }
+  };
+
+  const getDestinations = async (chatId) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+          scope: "read:chats",
+        },
+      });
+
+      const response = await axios.get(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/chats/${chatId}/destinations`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching destinations:", error);
+      throw error;
+    }
+  };
+
   return {
     createGroupChat,
     getGroupChats,
@@ -192,5 +249,7 @@ export const useGroupChatService = () => {
     getGroupChatByTripId,
     sendMessage,
     updateGroupChat,
+    addDestinations,
+    getDestinations,
   };
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import {
   Clock,
   MapPin,
@@ -7,8 +7,13 @@ import {
   Edit2,
   Trash2,
 } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { useGroupChatService } from "../../../services/chatService";
 
 const Destinations = ({ tripData = {} }) => {
+  const { chatId } = useParams();
+  const { addDestinations, getDestinations } = useGroupChatService();
+
   // Default destinations if none provided
   const defaultDestinations = [
     {
@@ -48,6 +53,24 @@ const Destinations = ({ tripData = {} }) => {
   });
   const [newAttraction, setNewAttraction] = useState("");
 
+  // Fetch destinations when component mounts
+  useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        const savedDestinations = await getDestinations(chatId);
+        if (savedDestinations.length > 0) {
+          setDestinations(savedDestinations);
+        }
+      } catch (error) {
+        console.error("Error fetching destinations:", error);
+      }
+    };
+
+    if (chatId) {
+      fetchDestinations();
+    }
+  }, [chatId]);
+
   const handleToggleExpand = (index) => {
     if (expandedDestination === index) {
       setExpandedDestination(null);
@@ -56,18 +79,28 @@ const Destinations = ({ tripData = {} }) => {
     }
   };
 
-  const handleAddDestination = () => {
+  const handleAddDestination = async () => {
     if (newDestination.name.trim() === "") return;
 
-    setDestinations([...destinations, newDestination]);
-    setNewDestination({
-      name: "",
-      country: "",
-      days: 1,
-      attractions: [],
-      notes: "",
-    });
-    setIsAddingDestination(false);
+    try {
+      const updatedDestinations = [...destinations, newDestination];
+
+      // Save to backend
+      await addDestinations(chatId, updatedDestinations);
+
+      setDestinations(updatedDestinations);
+      setNewDestination({
+        name: "",
+        country: "",
+        days: 1,
+        attractions: [],
+        notes: "",
+      });
+      setIsAddingDestination(false);
+    } catch (error) {
+      console.error("Failed to add destination:", error);
+      // Optionally show error to user
+    }
   };
 
   const handleAddAttraction = () => {
@@ -88,12 +121,20 @@ const Destinations = ({ tripData = {} }) => {
     });
   };
 
-  const handleDeleteDestination = (index) => {
-    const updatedDestinations = [...destinations];
-    updatedDestinations.splice(index, 1);
-    setDestinations(updatedDestinations);
-    if (expandedDestination === index) {
-      setExpandedDestination(null);
+  const handleDeleteDestination = async (index) => {
+    try {
+      const updatedDestinations = [...destinations];
+      updatedDestinations.splice(index, 1);
+
+      // Save to backend
+      await addDestinations(chatId, updatedDestinations);
+
+      setDestinations(updatedDestinations);
+      if (expandedDestination === index) {
+        setExpandedDestination(null);
+      }
+    } catch (error) {
+      console.error("Failed to delete destination:", error);
     }
   };
 

@@ -187,4 +187,55 @@ router.put("/:chatId", async (req, res) => {
   }
 });
 
+// Add destinations to a group chat
+router.post('/:chatId/destinations', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { destinations } = req.body;
+
+    const groupChat = await GroupChat.findOne({ chatId });
+
+    if (!groupChat) {
+      return res.status(404).json({ message: 'Group chat not found' });
+    }
+
+    // Validate destinations
+    const validDestinations = destinations.map(dest => ({
+      name: dest.name,
+      country: dest.country,
+      days: dest.days,
+      attractions: dest.attractions || [],
+      notes: dest.notes || ''
+    }));
+
+    // Replace existing destinations or append
+    groupChat.destinations = validDestinations;
+
+    await groupChat.save();
+
+    res.status(200).json(groupChat.destinations);
+  } catch (error) {
+    console.error('Error adding destinations:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get destinations for a group chat
+router.get('/:chatId/destinations', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const groupChat = await GroupChat.findOne({ chatId });
+
+    if (!groupChat) {
+      return res.status(404).json({ message: 'Group chat not found' });
+    }
+
+    res.status(200).json(groupChat.destinations);
+  } catch (error) {
+    console.error('Error fetching destinations:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;
