@@ -46,6 +46,30 @@ const tripCostSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const noteSchema = new mongoose.Schema(
+  {
+    id: {
+      type: String,
+      default: () => new mongoose.Types.ObjectId().toString(),
+      unique: true,
+    },
+    text: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    isImportant: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { _id: false }
+);
+
 const groupChatSchema = new mongoose.Schema(
   {
     chatId: {
@@ -125,6 +149,7 @@ const groupChatSchema = new mongoose.Schema(
         min: 0,
       },
     },
+    notes: [noteSchema],
   },
   {
     timestamps: true,

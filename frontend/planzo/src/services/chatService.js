@@ -242,7 +242,7 @@ export const useGroupChatService = () => {
     }
   };
 
- // Save trip costs for a group chat
+  // Save trip costs for a group chat
   const saveTripCosts = async (chatId, costs) => {
     try {
       const token = await getAccessTokenSilently({
@@ -300,6 +300,119 @@ export const useGroupChatService = () => {
     }
   };
 
+  // Add a new note to a group chat
+  const addNote = async (chatId, noteData) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+          scope: "write:chats",
+        },
+      });
+
+      const response = await axios.post(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/chats/${chatId}/notes`,
+        noteData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error adding note:", error);
+      throw error;
+    }
+  };
+
+  // Get all notes for a group chat
+  const getNotes = async (chatId) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+          scope: "read:chats",
+        },
+      });
+
+      const response = await axios.get(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/chats/${chatId}/notes`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      throw error;
+    }
+  };
+
+  // Update a specific note
+  const updateNote = async (chatId, noteId, updateData) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+          scope: "write:chats",
+        },
+      });
+
+      const response = await axios.put(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/chats/${chatId}/notes/${noteId}`,
+        updateData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error updating note:", error);
+      throw error;
+    }
+  };
+
+  // Delete a specific note
+  const deleteNote = async (chatId, noteId) => {
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+          scope: "write:chats",
+        },
+      });
+
+      await axios.delete(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/chats/${chatId}/notes/${noteId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      throw error;
+    }
+  };
 
   return {
     createGroupChat,
@@ -312,5 +425,9 @@ export const useGroupChatService = () => {
     getDestinations,
     saveTripCosts,
     getTripCosts,
+    addNote,
+    getNotes,
+    updateNote,
+    deleteNote,
   };
 };

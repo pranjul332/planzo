@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 const GroupChat = require("../db/schema/Chat");
 const Trip = require("../db/schema/Trips");
@@ -313,6 +314,152 @@ router.get('/:chatId/trip-costs', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching trip costs:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Add a new note to a group chat
+router.post('/:chatId/notes', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { text, isImportant = false } = req.body;
+    const auth0Id = req.userId;
+
+    // Find the group chat and ensure the user is a member
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res
+        .status(404)
+        .json({ message: "Group chat not found or access denied" });
+    }
+
+    // Create a new note
+    const newNote = {
+      text,
+      isImportant,
+      createdAt: new Date(),
+      id: new mongoose.Types.ObjectId().toString()
+    };
+
+    // Add the note to the group chat's notes
+    groupChat.notes.push(newNote);
+    await groupChat.save();
+
+    res.status(201).json(newNote);
+  } catch (error) {
+    console.error('Error adding note:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get all notes for a group chat
+router.get('/:chatId/notes', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const auth0Id = req.userId;
+
+    // Find the group chat and ensure the user is a member
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res
+        .status(404)
+        .json({ message: "Group chat not found or access denied" });
+    }
+
+    // Sort notes by importance and creation date (most recent first)
+    const sortedNotes = groupChat.notes.sort((a, b) => {
+      // First, sort by importance (important notes first)
+      if (a.isImportant !== b.isImportant) {
+        return b.isImportant - a.isImportant;
+      }
+      // Then, sort by creation date (most recent first)
+      return b.createdAt - a.createdAt;
+    });
+
+    res.status(200).json(sortedNotes);
+  } catch (error) {
+    console.error('Error fetching notes:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Update a specific note
+router.put('/:chatId/notes/:noteId', async (req, res) => {
+  try {
+    const { chatId, noteId } = req.params;
+    const { text, isImportant } = req.body;
+    const auth0Id = req.userId;
+
+    // Find the group chat and ensure the user is a member
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res
+        .status(404)
+        .json({ message: "Group chat not found or access denied" });
+    }
+
+    // Find and update the specific note
+    const noteIndex = groupChat.notes.findIndex(note => note.id === noteId);
+
+    if (noteIndex === -1) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    // Update note fields if provided
+    if (text !== undefined) {
+      groupChat.notes[noteIndex].text = text;
+    }
+    if (isImportant !== undefined) {
+      groupChat.notes[noteIndex].isImportant = isImportant;
+    }
+
+    await groupChat.save();
+
+    res.status(200).json(groupChat.notes[noteIndex]);
+  } catch (error) {
+    console.error('Error updating note:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Delete a specific note
+router.delete('/:chatId/notes/:noteId', async (req, res) => {
+  try {
+    const { chatId, noteId } = req.params;
+    const auth0Id = req.userId;
+
+    // Find the group chat and ensure the user is a member
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res
+        .status(404)
+        .json({ message: "Group chat not found or access denied" });
+    }
+
+    // Remove the specific note
+    groupChat.notes = groupChat.notes.filter(note => note.id !== noteId);
+
+    await groupChat.save();
+
+    res.status(200).json({ message: "Note deleted successfully" });
+  } catch (error) {
+    console.error('Error deleting note:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
