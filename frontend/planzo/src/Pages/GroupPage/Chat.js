@@ -1,5 +1,14 @@
-import React, { useState, useEffect, useRef,useCallback } from "react";
-import { User, Send, Paperclip, Image, Smile, X, Phone } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  User,
+  Send,
+  Paperclip,
+  Image,
+  Smile,
+  X,
+  Phone,
+  Users,
+} from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import Menu from "./Menu";
@@ -22,6 +31,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [members, setMembers] = useState([]);
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -35,7 +45,8 @@ const Chat = () => {
       setChatData(data);
       setMessages(data.messages || []);
 
-      // Initialize group data for settings
+      setMembers(data.members || []);
+
       setGroupData({
         name: data.name || "Group Chat",
         description: data.description || "",
@@ -51,13 +62,13 @@ const Chat = () => {
     } finally {
       setLoading(false);
     }
-  }, [chatId]); // ✅ chatId as dependency
+  }, [chatId]); // Ensure all external dependencies are included
 
   useEffect(() => {
     if (chatId) {
       fetchChatData();
     }
-  }, [fetchChatData]); // ✅ useCallback prevents infinite re-renders
+  }, [chatId, fetchChatData]); // ✅ useCallback prevents infinite re-renders
 
   // Format messages for display
   const formattedMessages = messages.map((msg) => ({
@@ -234,15 +245,33 @@ const Chat = () => {
             >
               <X className="size-5 text-black" />
             </button>
+            <h2 className="text-lg font-semibold">Group Members</h2>
           </div>
         </div>
 
-        <div className="p-4">
-          <input
-            type="text"
-            placeholder="Search chats..."
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
+        {/* Members List */}
+        <div className="p-2 overflow-y-auto max-h-[calc(100vh-200px)]">
+          {members.map((member) => (
+            <div
+              key={member.auth0Id}
+              className="flex items-center p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                <User className="w-6 h-6 text-gray-500" />
+              </div>
+              <div>
+                <p className="font-medium">{member.name}</p>
+                <p className="text-xs text-gray-500">
+                  {member.role || "Member"}
+                </p>
+              </div>
+              {member.auth0Id === user?.sub && (
+                <span className="ml-auto text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                  You
+                </span>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Trip info could go here */}
@@ -271,11 +300,9 @@ const Chat = () => {
             <div className="ml-3 flex-1">
               <h2 className="font-semibold">{groupData.name}</h2>
               <p className="text-sm text-gray-500">
-                {groupData.destination && `📍 ${groupData.destination}`}
+                {members.length} members
+                {groupData.destination && ` • 📍 ${groupData.destination}`}
                 {groupData.date && ` • 📅 ${groupData.date}`}
-                {!groupData.destination &&
-                  !groupData.date &&
-                  `${chatData?.members?.length || 0} members`}
               </p>
             </div>
             <Phone className="w-6 h-6 text-gray-500 mr-2" />
