@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   X,
@@ -21,15 +21,27 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 import TripFlowGraph from "./TripFlowGraph";
 import { useGroupChatService } from "../../services/chatService";
 
 const TripDetails = ({ trip, onClose, onAddMember }) => {
-  const [showTripGraph, setShowTripGraph] = useState(false);
+  const [tripCosts, setTripCosts] = useState([
+    { category: "travel", amount: 0, percentage: 0 },
+    { category: "stay", amount: 0, percentage: 0 },
+    { category: "food", amount: 0, percentage: 0 },
+    { category: "activities", amount: 0, percentage: 0 },
+  ]);
+  const [totalCost, setTotalCost] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { createGroupChat, getGroupChatByTripId } = useGroupChatService();
+  const [showTripGraph, setShowTripGraph] = useState(false);
+
+  const { createGroupChat, getGroupChatByTripId, getTripCosts } =
+    useGroupChatService();
+
+  const budget = trip.budget || trip.totalBudget || 0;
 
   // Format date with fallback for missing or invalid dates
   const formatDate = (dateString) => {
@@ -108,20 +120,65 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
     : [];
 
   // Ensure expenses is always an array with valid structure for the chart
-  const safeExpenses = Array.isArray(trip.expenses)
-    ? trip.expenses.map((expense) => {
-        if (typeof expense === "object" && expense !== null) {
-          return {
-            category:
-              typeof expense.category === "string"
-                ? expense.category
-                : "Miscellaneous",
-            amount: typeof expense.amount === "number" ? expense.amount : 0,
-          };
+  const safeExpenses = [
+    { category: "travel", amount: 0 },
+    { category: "stay", amount: 0 },
+    { category: "food", amount: 0 },
+    { category: "activities", amount: 0 },
+  ];
+  useEffect(() => {
+    const fetchTripCosts = async () => {
+      try {
+        setIsLoading(true);
+        // First, try to get the group chat for this trip
+        const chatResponse = await getGroupChatByTripId(
+          trip.tripId || trip.id || trip._id
+        );
+
+        if (chatResponse && chatResponse.chatId) {
+          // If chat exists, fetch its trip costs
+          const costsData = await getTripCosts(chatResponse.chatId);
+
+          if (costsData && costsData.categories) {
+            // Update trip costs and total cost
+            setTripCosts(costsData.categories);
+            setTotalCost(costsData.totalCost || 0);
+          }
         }
-        return { category: "Miscellaneous", amount: 0 };
-      })
-    : [];
+      } catch (error) {
+        console.error("Error fetching trip costs:", error);
+        // Optionally show an error message to the user
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTripCosts();
+  }, [trip]);
+
+  // Determine the color and text for spent amount based on budget
+  const getSpentAmountClass = () => {
+    if (totalCost > budget) {
+      return "text-3xl font-semibold text-red-600 mt-2";
+    }
+    return "text-3xl font-semibold text-purple-600 mt-2";
+  };
+
+  // If trip has expenses, map them to the correct categories
+  if (
+    Array.isArray(trip.expenses) ||
+    Array.isArray(trip.tripCosts?.categories)
+  ) {
+    const expenseData = trip.expenses || trip.tripCosts?.categories;
+    expenseData.forEach((expense) => {
+      const matchingCategory = safeExpenses.find(
+        (safe) => safe.category === expense.category
+      );
+      if (matchingCategory) {
+        matchingCategory.amount = expense.amount || 0;
+      }
+    });
+  }
 
   // Create a safe trip object with all necessary properties
   const safeTrip = {
@@ -223,10 +280,16 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
               <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
                 <DollarSign className="w-6 h-6 text-purple-600" />
                 Budget Overview
+                {isLoading && (
+                  <span className="ml-2 text-sm text-gray-500">
+                    Loading costs...
+                  </span>
+                )}
               </h2>
+
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={safeExpenses}>
+                  <LineChart data={tripCosts}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                     <XAxis dataKey="category" stroke="#6B7280" />
                     <YAxis stroke="#6B7280" />
@@ -237,10 +300,13 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                         borderRadius: "8px",
                         padding: "8px",
                       }}
+                      formatter={(value, name) => [`$${value}`, name]}
                     />
+                    <Legend />
                     <Line
                       type="monotone"
                       dataKey="amount"
+                      name="Expenses"
                       stroke="#8b5cf6"
                       strokeWidth={2}
                       dot={{
@@ -252,17 +318,42 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-6 grid grid-cols-2 gap-6">
+
+              <div className="mt-6 grid grid-cols-4 gap-4">
+                {tripCosts.map((expense) => (
+                  <div
+                    key={expense.category}
+                    className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm text-center"
+                  >
+                    <span className="text-gray-600 capitalize">
+                      {expense.category}
+                    </span>
+                    <p className="text-2xl font-semibold text-purple-600 mt-2">
+                      ${expense.amount.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {expense.percentage}%
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-6">
                 <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                   <span className="text-gray-600 text-lg">Total Budget</span>
                   <p className="text-3xl font-semibold text-gray-800 mt-2">
-                    ${safeTrip.budget.toLocaleString()}
+                    ${budget.toLocaleString()}
                   </p>
                 </div>
                 <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                   <span className="text-gray-600 text-lg">Spent</span>
-                  <p className="text-3xl font-semibold text-purple-600 mt-2">
-                    ${safeTrip.currentSpent.toLocaleString()}
+                  <p className={getSpentAmountClass()}>
+                    ${totalCost.toLocaleString()}
+                    {totalCost > budget && (
+                      <span className="ml-2 text-sm text-red-500">
+                        (Over Budget)
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
