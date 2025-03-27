@@ -41,9 +41,14 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
   const [tripId, setTripId] = useState(null);
   const [chatId, setChatId] = useState(null);
   const [tripData, setTripData] = useState(null);
+  const [groupChatData, setGroupChatData] = useState(null);
 
-  const { createGroupChat, getGroupChatByTripId, getTripCosts } =
-    useGroupChatService();
+  const {
+    createGroupChat,
+    getGroupChatByTripId,
+    getTripCosts,
+    getGroupChatById,
+  } = useGroupChatService();
   const { getTripById } = useTripService();
 
   const budget = trip?.budget || trip?.totalBudget || 0;
@@ -70,6 +75,8 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
         if (chatResponse && chatResponse.chatId) {
           setTripId(chatResponse.tripId);
           setChatId(chatResponse.chatId);
+          const fullChatDetails = await getGroupChatById(chatResponse.chatId);
+          setGroupChatData(fullChatDetails);
 
           const costsData = await getTripCosts(chatResponse.chatId);
           if (costsData && costsData.categories) {
@@ -92,6 +99,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
       try {
         setIsLoading(true);
         const data = await getTripById(tripId);
+
         setTripData(data);
       } catch (error) {
         console.error("Error fetching trip details:", error);
@@ -148,33 +156,26 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
     }
   };
 
-  // Safely handle members and destinations
-  const safeMembers = Array.isArray(tripData?.members)
-    ? tripData.members.map((member) => {
-        if (typeof member === "object" && member !== null) {
-          return {
-            id:
-              member.id ||
-              member._id ||
-              `member-${Math.random().toString(36).substr(2, 9)}`,
-            name:
-              typeof member.name === "string" ? member.name : "Unknown Member",
-            role: typeof member.role === "string" ? member.role : "Member",
-          };
-        }
-        return {
-          id: `member-${Math.random().toString(36).substr(2, 9)}`,
-          name: "Unknown Member",
-          role: "Member",
-        };
-      })
+  // Prepare members from group chat schema
+  const safeMembers = groupChatData?.members
+    ? groupChatData.members.map((member) => ({
+        id: member.auth0Id,
+        name: member.name,
+        role: member.role || "Member",
+      }))
     : [];
 
-  const safeSideDestinations = Array.isArray(trip?.sideDestinations)
-    ? trip.sideDestinations.map((dest) =>
-        typeof dest === "string" ? dest : JSON.stringify(dest)
+  // Prepare destinations from group chat schema
+  const chatDestinations = groupChatData?.destinations
+    ? groupChatData.destinations.map(
+        (dest) => `${dest.name} `
       )
     : [];
+  // Combine destinations from trip and chat
+  const safeSideDestinations = [
+    ...(trip?.sideDestinations || []),
+    ...chatDestinations,
+  ];
 
   const safeExpenses = [
     { category: "travel", amount: 0 },
@@ -277,31 +278,101 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Destinations */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                <Map className="w-6 h-6 text-purple-600" />
-                Destinations
-              </h2>
-              <div className="space-y-4">
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                  <div className="flex items-center gap-3 text-purple-600 font-medium text-lg">
-                    <MapPin className="w-6 h-6" />
-                    Main:{" "}
-                    {tripData?.mainDestination ||
-                      trip?.mainDestination ||
-                      "No destination set"}
+            <div className="bg-gradient-to-br from-purple-50 to-white rounded-2xl shadow-lg p-6 border border-purple-100/50">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                  <Map className="w-7 h-7 text-purple-600 stroke-[2.5]" />
+                  <span>Trip Destinations</span>
+                </h2>
+                <div className="text-sm text-gray-500 flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-purple-500"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  {safeSideDestinations.length + 1} Destinations
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Main Destination Card */}
+                <div className="bg-white rounded-2xl border border-purple-100 shadow-md overflow-hidden transition-all hover:shadow-xl">
+                  <div className="p-5 flex items-center gap-4">
+                    <div className="bg-purple-100 p-3 rounded-full">
+                      <MapPin className="w-7 h-7 text-purple-600 stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-1">
+                        Main Destination
+                      </h3>
+                      <p className="text-lg text-purple-600 font-medium">
+                        Main:{" "}
+                        {tripData?.mainDestination ||
+                          tripData?.mainDestination ||
+                          trip?.mainDestination ||
+                          "No destination set"}
+                      </p>
+                      {groupChatData?.destinations?.[0]?.country && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          {groupChatData.destinations[0].country}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {safeSideDestinations.map((dest, index) => (
-                    <div
-                      key={index}
-                      className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <span className="text-gray-700">{dest}</span>
+
+                {/* Side Destinations Grid */}
+                {safeSideDestinations.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                      Side Destinations
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {safeSideDestinations.map((dest, index) => (
+                        <div
+                          key={index}
+                          className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden transform transition-all hover:scale-105 hover:shadow-xl"
+                        >
+                          <div className="p-4 flex items-center gap-3">
+                            <div className="bg-purple-50 p-2 rounded-full">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-6 w-6 text-purple-500"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                              </svg>
+                            </div>
+                            <span className="text-gray-800 font-medium text-base">
+                              {dest}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 
