@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import TripFlowGraph from "./TripFlowGraph";
 import { useGroupChatService } from "../../services/chatService";
+import { useTripService } from "../../services/tripService";
 
 const TripDetails = ({ trip, onClose, onAddMember }) => {
   const [tripCosts, setTripCosts] = useState([
@@ -37,16 +38,19 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [showTripGraph, setShowTripGraph] = useState(false);
+  const [tripId, setTripId] = useState(null);
+  const [chatId, setChatId] = useState(null);
+  const [tripData, setTripData] = useState(null);
 
   const { createGroupChat, getGroupChatByTripId, getTripCosts } =
     useGroupChatService();
+  const { getTripById } = useTripService();
 
-  const budget = trip.budget || trip.totalBudget || 0;
+  const budget = trip?.budget || trip?.totalBudget || 0;
 
   // Format date with fallback for missing or invalid dates
   const formatDate = (dateString) => {
     if (!dateString) return "TBD";
-
     try {
       return new Date(dateString).toLocaleDateString();
     } catch (error) {
@@ -55,32 +59,86 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
     }
   };
 
-  // Handler for starting a group chat
+  useEffect(() => {
+    const fetchTripCosts = async () => {
+      try {
+        setIsLoading(true);
+        const chatResponse = await getGroupChatByTripId(
+          trip?.tripId || trip?.id || trip?._id
+        );
+
+        if (chatResponse && chatResponse.chatId) {
+          setTripId(chatResponse.tripId);
+          setChatId(chatResponse.chatId);
+
+          const costsData = await getTripCosts(chatResponse.chatId);
+          if (costsData && costsData.categories) {
+            setTripCosts(costsData.categories);
+            setTotalCost(costsData.totalCost || 0);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching trip costs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTripCosts();
+  }, [trip]);
+
+  useEffect(() => {
+    const fetchTripData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getTripById(tripId);
+        setTripData(data);
+      } catch (error) {
+        console.error("Error fetching trip details:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (tripId) {
+      fetchTripData();
+    }
+  }, [tripId]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <p>Loading trip details...</p>
+      </div>
+    );
+  }
+
+  if (!trip) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <p>Trip not found</p>
+      </div>
+    );
+  }
+
   const handleStartGroupChat = async () => {
     try {
       setIsLoading(true);
-
-      // Try to find an existing chat for this trip first
       try {
         const existingChat = await getGroupChatByTripId(
-          trip.tripId || trip.id || trip._id
+          trip?.tripId || trip?.id || trip?._id
         );
-
-        // If we found an existing chat, navigate to it
         if (existingChat && existingChat.chatId) {
           navigate(`/chat/${existingChat.chatId}`);
           return;
         }
       } catch (error) {
-        // If error is 404, that means no chat exists yet, which is fine
-        // For other errors, we'll just proceed to create a new chat
         console.log("No existing chat found, creating a new one");
       }
 
-      // Create a new group chat for this trip if none exists
-      const newChat = await createGroupChat(trip.tripId || trip.id || trip._id);
-
-      // Navigate to the chat screen
+      const newChat = await createGroupChat(
+        trip?.tripId || trip?.id || trip?._id
+      );
       navigate(`/chat/${newChat.chatId}`);
     } catch (error) {
       console.error("Failed to create/access group chat:", error);
@@ -90,9 +148,9 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
     }
   };
 
-  // Ensure that trip.memberDetails is always an array and each member has the required properties
-  const safeMembers = Array.isArray(trip.memberDetails || trip.members)
-    ? (trip.memberDetails || trip.members).map((member) => {
+  // Safely handle members and destinations
+  const safeMembers = Array.isArray(tripData?.members)
+    ? tripData.members.map((member) => {
         if (typeof member === "object" && member !== null) {
           return {
             id:
@@ -112,51 +170,19 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
       })
     : [];
 
-  // Ensure side destinations is always an array of strings
-  const safeSideDestinations = Array.isArray(trip.sideDestinations)
+  const safeSideDestinations = Array.isArray(trip?.sideDestinations)
     ? trip.sideDestinations.map((dest) =>
         typeof dest === "string" ? dest : JSON.stringify(dest)
       )
     : [];
 
-  // Ensure expenses is always an array with valid structure for the chart
   const safeExpenses = [
     { category: "travel", amount: 0 },
     { category: "stay", amount: 0 },
     { category: "food", amount: 0 },
     { category: "activities", amount: 0 },
   ];
-  useEffect(() => {
-    const fetchTripCosts = async () => {
-      try {
-        setIsLoading(true);
-        // First, try to get the group chat for this trip
-        const chatResponse = await getGroupChatByTripId(
-          trip.tripId || trip.id || trip._id
-        );
 
-        if (chatResponse && chatResponse.chatId) {
-          // If chat exists, fetch its trip costs
-          const costsData = await getTripCosts(chatResponse.chatId);
-
-          if (costsData && costsData.categories) {
-            // Update trip costs and total cost
-            setTripCosts(costsData.categories);
-            setTotalCost(costsData.totalCost || 0);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching trip costs:", error);
-        // Optionally show an error message to the user
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTripCosts();
-  }, [trip]);
-
-  // Determine the color and text for spent amount based on budget
   const getSpentAmountClass = () => {
     if (totalCost > budget) {
       return "text-3xl font-semibold text-red-600 mt-2";
@@ -164,12 +190,11 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
     return "text-3xl font-semibold text-purple-600 mt-2";
   };
 
-  // If trip has expenses, map them to the correct categories
   if (
-    Array.isArray(trip.expenses) ||
-    Array.isArray(trip.tripCosts?.categories)
+    Array.isArray(trip?.expenses) ||
+    Array.isArray(trip?.tripCosts?.categories)
   ) {
-    const expenseData = trip.expenses || trip.tripCosts?.categories;
+    const expenseData = trip?.expenses || trip?.tripCosts?.categories;
     expenseData.forEach((expense) => {
       const matchingCategory = safeExpenses.find(
         (safe) => safe.category === expense.category
@@ -180,22 +205,22 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
     });
   }
 
-  // Create a safe trip object with all necessary properties
   const safeTrip = {
     ...trip,
-    name: trip.name || "Unnamed Trip",
-    summary: trip.summary || trip.description || "",
-    mainDestination: trip.mainDestination || "No destination set",
+    name: trip?.name || "Unnamed Trip",
+    summary: trip?.summary || trip?.description || "",
+    mainDestination: trip?.mainDestination || "No destination set",
     sideDestinations: safeSideDestinations,
     expenses: safeExpenses,
-    budget: typeof trip.budget === "number" ? trip.budget : 0,
-    currentSpent: typeof trip.currentSpent === "number" ? trip.currentSpent : 0,
+    budget: typeof trip?.budget === "number" ? trip.budget : 0,
+    currentSpent:
+      typeof trip?.currentSpent === "number" ? trip.currentSpent : 0,
     dates: {
-      start: trip.dates?.start || trip.startDate || null,
-      end: trip.dates?.end || trip.endDate || null,
+      start: trip?.dates?.start || trip?.startDate || null,
+      end: trip?.dates?.end || trip?.endDate || null,
     },
     members:
-      typeof trip.members === "number" ? trip.members : safeMembers.length,
+      typeof trip?.members === "number" ? trip.members : safeMembers.length,
   };
 
   return (
@@ -207,9 +232,11 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">
-                {safeTrip.name}
+                {tripData?.name || trip?.name || "Unnamed Trip"}
               </h1>
-              <p className="text-gray-600 mt-2 text-lg">{safeTrip.summary}</p>
+              <p className="text-gray-600 mt-2 text-lg">
+                {tripData?.description || trip?.description || ""}
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -259,7 +286,10 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                 <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                   <div className="flex items-center gap-3 text-purple-600 font-medium text-lg">
                     <MapPin className="w-6 h-6" />
-                    Main: {safeTrip.mainDestination}
+                    Main:{" "}
+                    {tripData?.mainDestination ||
+                      trip?.mainDestination ||
+                      "No destination set"}
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -369,14 +399,14 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                 <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-gray-100">
                   <Calendar className="w-6 h-6 text-purple-600" />
                   <span className="text-gray-700">
-                    {formatDate(safeTrip.dates.start)} -{" "}
-                    {formatDate(safeTrip.dates.end)}
+                    {formatDate(tripData?.startDate || trip?.startDate)} -{" "}
+                    {formatDate(tripData?.endDate || trip?.endDate)}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-gray-100">
                   <Users className="w-6 h-6 text-purple-600" />
                   <span className="text-gray-700">
-                    {safeTrip.members} members
+                    {safeMembers.length} members
                   </span>
                 </div>
               </div>
