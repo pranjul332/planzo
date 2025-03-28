@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plane, Bed, Pizza, Ticket, PieChart, DollarSign } from "lucide-react";
+import { Plane, Bed, Pizza, Ticket, PieChart, IndianRupee } from "lucide-react";
 import { useGroupChatService }  from "../../../services/chatService"
 import { useParams } from "react-router-dom";
 
@@ -10,10 +10,10 @@ const TripCost = ({ tripData = {} }) => {
 
   // Default cost data if none provided
   const defaultCosts = {
-    travel: 1200,
-    stay: 800,
-    food: 400,
-    activities: 500,
+    travel: 0,
+    stay: 0,
+    food: 0,
+    activities: 0,
   };
 
   const [costs, setCosts] = useState(tripData.costs || defaultCosts);
@@ -115,7 +115,7 @@ const TripCost = ({ tripData = {} }) => {
 
               {editMode ? (
                 <div className="flex items-center">
-                  <DollarSign className="w-4 h-4 text-gray-500" />
+                  <IndianRupee className="w-4 h-4 text-gray-500" />
                   <input
                     type="number"
                     value={editedCosts[category.id]}
@@ -128,7 +128,7 @@ const TripCost = ({ tripData = {} }) => {
                 </div>
               ) : (
                 <>
-                  <p className="text-xl font-bold">${costs[category.id]}</p>
+                  <p className="text-xl font-bold">₹{costs[category.id]}</p>
                   <p className="text-xs text-gray-500">
                     {calculatePercentage(costs[category.id])}% of total
                   </p>
@@ -155,7 +155,7 @@ const TripCost = ({ tripData = {} }) => {
             <h4 className="font-medium text-blue-800">Total Trip Cost</h4>
           </div>
           <p className="text-2xl font-bold text-blue-900">
-            $
+            ₹
             {editMode
               ? Object.values(editedCosts).reduce((sum, cost) => sum + cost, 0)
               : totalCost}

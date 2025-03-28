@@ -11,6 +11,7 @@ import {
   Trash2,
   X,
   AlertTriangle,
+  IndianRupee,
 } from "lucide-react";
 
 import { Dialog } from "../../components/ui/dialog/Dialog";
@@ -185,7 +186,7 @@ const GroupSetting = ({
                     <div>
                       <label className="text-sm font-medium">Budget</label>
                       <div className="relative mt-1">
-                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
                         <Input
                           type="number"
                           value={formData.budget}

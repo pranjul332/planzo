@@ -12,6 +12,8 @@ import {
   ChevronDown,
   ChevronUp,
   GitBranch,
+  IndianRupee,
+  IndianRupeeIcon,
 } from "lucide-react";
 import {
   LineChart,
@@ -311,19 +313,17 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-gray-800 mb-1">
-                        Main Destination
+                        Main Destination :
                       </h3>
                       <p className="text-lg text-purple-600 font-medium">
-                        Main:{" "}
+                        {" "}
                         {tripData?.mainDestination ||
                           tripData?.mainDestination ||
                           trip?.mainDestination ||
                           "No destination set"}
                       </p>
                       {groupChatData?.destinations?.[0]?.country && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          {groupChatData.destinations[0].country}
-                        </p>
+                        <p className="text-sm text-gray-500 mt-1"></p>
                       )}
                     </div>
                   </div>
@@ -379,7 +379,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
             {/* Budget Overview */}
             <div className="bg-gray-50 rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                <DollarSign className="w-6 h-6 text-purple-600" />
+                <IndianRupee className="w-6 h-6 text-purple-600" />
                 Budget Overview
                 {isLoading && (
                   <span className="ml-2 text-sm text-gray-500">
@@ -401,7 +401,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                         borderRadius: "8px",
                         padding: "8px",
                       }}
-                      formatter={(value, name) => [`$${value}`, name]}
+                      formatter={(value, name) => [`₹${value}`, name]}
                     />
                     <Legend />
                     <Line
@@ -430,7 +430,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                       {expense.category}
                     </span>
                     <p className="text-2xl font-semibold text-purple-600 mt-2">
-                      ${expense.amount.toLocaleString()}
+                      ₹{expense.amount.toLocaleString()}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
                       {expense.percentage}%
@@ -443,13 +443,13 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                 <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                   <span className="text-gray-600 text-lg">Total Budget</span>
                   <p className="text-3xl font-semibold text-gray-800 mt-2">
-                    ${budget.toLocaleString()}
+                    ₹{budget.toLocaleString()}
                   </p>
                 </div>
                 <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                   <span className="text-gray-600 text-lg">Spent</span>
                   <p className={getSpentAmountClass()}>
-                    ${totalCost.toLocaleString()}
+                    ₹{totalCost.toLocaleString()}
                     {totalCost > budget && (
                       <span className="ml-2 text-sm text-red-500">
                         (Over Budget)
