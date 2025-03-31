@@ -74,12 +74,18 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
   const formatDate = (dateString) => {
     if (!dateString) return "TBD";
     try {
-      return new Date(dateString).toLocaleDateString();
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "numeric",
+        year: "numeric",
+      });
     } catch (error) {
       console.error("Error formatting date:", error);
       return "TBD";
     }
   };
+
 
   useEffect(() => {
     const fetchTripCosts = async () => {

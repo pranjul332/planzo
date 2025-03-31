@@ -20,7 +20,7 @@ const InviteAccept = () => {
       // If not authenticated, store the invite code and redirect to login
       sessionStorage.setItem("pendingInviteCode", inviteCode);
       loginWithRedirect({
-        appState: { returnTo: `/invite/${inviteCode}` },
+        appState: { returnTo: `trip/ManageTrip` },
       });
     }
   }, [isAuthenticated, inviteCode]);
@@ -33,7 +33,7 @@ const InviteAccept = () => {
 
       // After successful acceptance, navigate to the trip
       setTimeout(() => {
-        navigate(`/trips/${result.tripId}`);
+        navigate(`trip/ManageTrip`);
       }, 2000);
     } catch (error) {
       console.error("Error accepting invitation:", error);

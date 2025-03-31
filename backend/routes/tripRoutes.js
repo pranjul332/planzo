@@ -9,14 +9,16 @@ const {getUserInfo} =require("../utils/auth0service")
 // Get all trips for the current user
 router.get("/", async (req, res) => {
   try {
-    // Find trips created by the user
-    const createdTrips = await Trip.find({ auth0Id: req.userId });
+    // Find trips created by the user, sorted by newest first
+    const createdTrips = await Trip.find({ auth0Id: req.userId }).sort({
+      createdAt: -1,
+    });
 
-    // Find trips where the user is a member
+    // Find trips where the user is a member, sorted by newest first
     const joinedTrips = await Trip.find({
       "members.auth0Id": req.userId,
       auth0Id: { $ne: req.userId }, // Exclude trips user created (to avoid duplicates)
-    });
+    }).sort({ createdAt: -1 });
 
     // Combine both sets of trips
     const allTrips = [
@@ -32,13 +34,12 @@ router.get("/", async (req, res) => {
       })),
     ];
 
-    allTrips.reverse();
-
     res.json(allTrips);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 // Get a specific trip
 router.get("/:tripId", async (req, res) => {
