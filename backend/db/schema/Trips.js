@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 
 const memberSchema = new mongoose.Schema({
+  auth0Id: {
+    type: String,
+    // required: true,
+  },
   name: {
     type: String,
     required: true,

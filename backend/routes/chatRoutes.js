@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const router = express.Router();
 const GroupChat = require("../db/schema/Chat");
 const Trip = require("../db/schema/Trips");
+const { getUserInfo } = require("../utils/auth0service");
 
 // Create a new group chat for a trip
 router.post("/:tripId", async (req, res) => {
@@ -16,7 +17,8 @@ router.post("/:tripId", async (req, res) => {
         .status(404)
         .json({ message: "Trip not found or access denied" });
     }
-
+    const userInfo = await getUserInfo(auth0Id);
+     userName = userInfo.name;
     // Create new group chat
     const groupChat = new GroupChat({
       tripId: trip.tripId,
@@ -26,7 +28,7 @@ router.post("/:tripId", async (req, res) => {
         // Add trip creator
         {
           auth0Id,
-          name:  "Trip Creator",
+          name: userName,
           role: "Admin",
         },
         // Add all trip members

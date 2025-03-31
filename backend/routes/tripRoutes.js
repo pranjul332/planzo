@@ -1,18 +1,40 @@
 const express = require("express");
 const router = express.Router();
 const Trip = require("../db/schema/Trips");
+const GroupChat = require("../db/schema/Chat")
+const TripInvitation = require("../db/schema/TripInvite")
 const { v4: uuidv4 } = require("uuid");
+const {getUserInfo} =require("../utils/auth0service")
 
 // Get all trips for the current user
 router.get("/", async (req, res) => {
   try {
-    const trips = await Trip.find({ auth0Id: req.userId });
-    res.json(
-      trips.map((trip) => ({
+    // Find trips created by the user
+    const createdTrips = await Trip.find({ auth0Id: req.userId });
+
+    // Find trips where the user is a member
+    const joinedTrips = await Trip.find({
+      "members.auth0Id": req.userId,
+      auth0Id: { $ne: req.userId }, // Exclude trips user created (to avoid duplicates)
+    });
+
+    // Combine both sets of trips
+    const allTrips = [
+      ...createdTrips.map((trip) => ({
         ...trip.toObject(),
-        id: trip.tripId, // Ensure frontend gets the unique tripId
-      }))
-    );
+        id: trip.tripId,
+        isOwner: true,
+      })),
+      ...joinedTrips.map((trip) => ({
+        ...trip.toObject(),
+        id: trip.tripId,
+        isOwner: false,
+      })),
+    ];
+
+    allTrips.reverse();
+
+    res.json(allTrips);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -23,7 +45,7 @@ router.get("/:tripId", async (req, res) => {
   try {
     const trip = await Trip.findOne({
       tripId: req.params.tripId,
-      auth0Id: req.userId,
+      $or: [{ auth0Id: req.userId }, { "members.auth0Id": req.userId }],
     });
 
     if (!trip) {
@@ -33,6 +55,7 @@ router.get("/:tripId", async (req, res) => {
     res.json({
       ...trip.toObject(),
       id: trip.tripId,
+      isOwner: trip.auth0Id === req.userId,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -49,7 +72,7 @@ router.post("/", async (req, res) => {
       endDate,
       description,
       budget,
-      members,
+      members = [],
       requestId,
     } = req.body;
 
@@ -70,6 +93,8 @@ router.post("/", async (req, res) => {
 
     // Generate a new unique tripId
     const tripId = uuidv4();
+
+    
 
     const trip = new Trip({
       tripId, // Explicitly set the tripId
@@ -101,7 +126,7 @@ router.put("/:tripId", async (req, res) => {
   try {
     const trip = await Trip.findOne({
       tripId: req.params.tripId,
-      auth0Id: req.userId,
+      $or: [{ auth0Id: req.userId }, { "members.auth0Id": req.userId }],
     });
 
     if (!trip) {
@@ -109,15 +134,17 @@ router.put("/:tripId", async (req, res) => {
     }
 
     // Update allowed fields
-    const updateFields = [
-      "name",
-      "mainDestination",
-      "startDate",
-      "endDate",
-      "description",
-      "budget",
-      "members",
-    ];
+    const updateFields = isOwner
+      ? [
+          "name",
+          "mainDestination",
+          "startDate",
+          "endDate",
+          "description",
+          "budget",
+          "members",
+        ]
+      : ["members"]; // Non-owners can only modify members (or whatever subset you decide)
 
     updateFields.forEach((field) => {
       if (req.body[field] !== undefined) {
@@ -130,6 +157,7 @@ router.put("/:tripId", async (req, res) => {
     res.json({
       ...updatedTrip.toObject(),
       id: updatedTrip.tripId,
+      isOwner,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -139,13 +167,16 @@ router.put("/:tripId", async (req, res) => {
 // Delete a trip
 router.delete("/:tripId", async (req, res) => {
   try {
+    // Only the owner can delete a trip
     const trip = await Trip.findOneAndDelete({
       tripId: req.params.tripId,
       auth0Id: req.userId,
     });
 
     if (!trip) {
-      return res.status(404).json({ message: "Trip not found" });
+      return res
+        .status(404)
+        .json({ message: "Trip not found or not authorized to delete" });
     }
 
     res.json({
@@ -156,5 +187,120 @@ router.delete("/:tripId", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+router.post("/:tripId/invite", async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const auth0Id = req.userId;
 
+    // Check if trip exists and user has access
+    const trip = await Trip.findOne({ tripId, auth0Id });
+    if (!trip) {
+      return res
+        .status(404)
+        .json({ message: "Trip not found or access denied" });
+    }
+
+    // Generate a unique invitation code
+    const inviteCode = uuidv4();
+
+    // Store the invitation in the database with an expiration
+    const invitation = new TripInvitation({
+      tripId,
+      inviteCode,
+      createdBy: auth0Id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days expiration
+    });
+
+    await invitation.save();
+
+    // Generate the shareable link
+    const inviteLink = `${`localhost:3000`}/invite/${inviteCode}`;
+
+    res.status(201).json({ inviteLink, inviteCode });
+  } catch (error) {
+    console.error("Error generating invitation link:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Step 2: Add a route to handle accepting invitations
+router.post("/invite/:inviteCode/accept", async (req, res) => {
+  try {
+    const { inviteCode } = req.params;
+    const auth0Id = req.userId;
+    console.log(auth0Id);
+    
+
+    // Find the invitation
+    const invitation = await TripInvitation.findOne({
+      inviteCode,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!invitation) {
+      return res
+        .status(404)
+        .json({ message: "Invitation not found or expired" });
+    }
+
+    // Get the trip
+    const trip = await Trip.findOne({ tripId: invitation.tripId });
+    const chat = await GroupChat.findOne({tripId:invitation.tripId})
+    // console.log(chat);
+    
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    // Try to get user info, fall back to default if it fails
+    let userName = "New Member";
+    try {
+      const userInfo = await getUserInfo(auth0Id);
+      // console.log(userInfo);
+      
+      userName = userInfo.name || userInfo.nickname || "New Member";
+    } catch (error) {
+      console.warn(
+        `Could not fetch Auth0 user info: ${error.message}. Using default name.`
+      );
+      // Continue with the default name rather than failing the request
+    }
+
+    // Check if user is already a member
+    const isAlreadyMember = trip.members.some(
+      (member) => member.auth0Id === auth0Id
+    );
+
+    if (!isAlreadyMember) {
+      trip.members.push({
+        auth0Id: auth0Id, // Make sure to save the auth0Id in the members array
+        name: userName,
+        role: "Member",
+      });
+      chat.members.push({
+        auth0Id: auth0Id, // Make sure to save the auth0Id in the members array
+        name: userName,
+        role: "Member",
+      });
+
+      await trip.save();
+      await chat.save()
+    }
+
+    // Mark invitation as accepted
+    invitation.accepted = true;
+    invitation.acceptedBy = auth0Id;
+    invitation.acceptedAt = new Date();
+    await invitation.save();
+
+    res.status(200).json({
+      message: "Successfully joined the trip",
+      tripId: trip.tripId,
+    });
+  } catch (error) {
+    console.error("Error accepting invitation:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+ 
 module.exports = router;

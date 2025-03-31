@@ -28,6 +28,7 @@ import {
 import TripFlowGraph from "./TripFlowGraph";
 import { useGroupChatService } from "../../services/chatService";
 import { useTripService } from "../../services/tripService";
+import { useInvitationService } from "../../services/inviteService";
 
 const TripDetails = ({ trip, onClose, onAddMember }) => {
   const [tripCosts, setTripCosts] = useState([
@@ -44,6 +45,11 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
   const [chatId, setChatId] = useState(null);
   const [tripData, setTripData] = useState(null);
   const [groupChatData, setGroupChatData] = useState(null);
+
+  const [inviteLink, setInviteLink] = useState("");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const { generateInviteLink } = useInvitationService();
 
   const {
     createGroupChat,
@@ -169,9 +175,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
 
   // Prepare destinations from group chat schema
   const chatDestinations = groupChatData?.destinations
-    ? groupChatData.destinations.map(
-        (dest) => `${dest.name} `
-      )
+    ? groupChatData.destinations.map((dest) => `${dest.name} `)
     : [];
   // Combine destinations from trip and chat
   const safeSideDestinations = [
@@ -197,7 +201,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
     Array.isArray(trip?.expenses) ||
     Array.isArray(trip?.tripCosts?.categories)
   ) {
-    const expenseData = trip?.expenses || trip?.tripCosts?.categories;
+    const expenseData = trip?.expenses || trip?.tripCosts?.categories || "0";
     expenseData.forEach((expense) => {
       const matchingCategory = safeExpenses.find(
         (safe) => safe.category === expense.category
@@ -207,6 +211,61 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
       }
     });
   }
+  // New function to handle inviting a member
+  const handleInviteMember = async () => {
+    try {
+      setIsGeneratingLink(true);
+      const { inviteLink } = await generateInviteLink(
+        trip?.tripId || trip?.id || trip?._id
+      );
+      setInviteLink(inviteLink);
+      setShowInviteModal(true);
+    } catch (error) {
+      console.error("Failed to generate invite link:", error);
+      alert("Failed to generate invite link. Please try again.");
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+  // Function to copy invite link to clipboard
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(inviteLink);
+    alert("Invite link copied to clipboard!");
+  };
+
+  // Add this in your JSX for the invite modal
+  const InviteModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <h2 className="text-xl font-semibold mb-4">Invite a Member</h2>
+        <p className="text-gray-600 mb-4">
+          Share this link with someone to invite them to join this trip:
+        </p>
+        <div className="flex items-center mb-6">
+          <input
+            type="text"
+            className="flex-1 p-3 border rounded-l-lg text-sm"
+            value={inviteLink}
+            readOnly
+          />
+          <button
+            onClick={handleCopyLink}
+            className="bg-purple-600 text-white px-4 py-3 rounded-r-lg hover:bg-purple-700"
+          >
+            Copy
+          </button>
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowInviteModal(false)}
+            className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   const safeTrip = {
     ...trip,
@@ -491,11 +550,12 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                   Members
                 </h2>
                 <button
-                  onClick={onAddMember}
+                  onClick={handleInviteMember}
+                  disabled={isGeneratingLink}
                   className="text-purple-600 hover:text-purple-700 flex items-center gap-2 font-medium"
                 >
                   <Plus className="w-5 h-5" />
-                  Add Member
+                  {isGeneratingLink ? "Generating..." : "Add Member"}
                 </button>
               </div>
               <div className="space-y-4">
@@ -536,6 +596,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
           </div>
         </div>
       </div>
+      {showInviteModal && <InviteModal />}
     </div>
   );
 };

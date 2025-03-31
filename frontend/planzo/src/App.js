@@ -19,37 +19,36 @@ import PremiumFeatures from "./Pages/SidebarPage/PremiumFeatures";
 
 // Auth components
 import ProtectedRoute from "./Auth/ProtectedRoute";
+import InviteAccept from "./Pages/MyTripPage/tripInvitation/InviteAcc";
 
 const App = () => {
   return (
-    
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/flights" element={<Home />} />
-          <Route path="/hotels" element={<Home />} />
-          <Route path="/holidays" element={<Home />} />
-          <Route path="/bus" element={<Home />} />
-          <Route path="/trains" element={<Home />} />
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<Home />} />
+      <Route path="/flights" element={<Home />} />
+      <Route path="/hotels" element={<Home />} />
+      <Route path="/holidays" element={<Home />} />
+      <Route path="/bus" element={<Home />} />
+      <Route path="/trains" element={<Home />} />
 
-          {/* Protected routes - require authentication */}
-          
-            <Route path="/holidays/booking" element={<Booking />} />
-            <Route path="/chat/:chatId" element={<Chat />} />
-            <Route path="/trip/ManageTrip" element={<TripsPage />} />
+      {/* Protected routes - require authentication */}
 
-            {/* Nested routes inside Layout */}
-            <Route path="/" element={<Layout />}>
-              <Route path="profile" element={<Profile />} />
-              <Route path="offer" element={<Offer />} />
-              <Route path="friends" element={<Friends />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="bucketlist" element={<BucketList />} />
-              <Route path="premium" element={<PremiumFeatures />} />
-            </Route>
-          
-        </Routes>
-     
+      <Route path="/holidays/booking" element={<Booking />} />
+      <Route path="/chat/:chatId" element={<Chat />} />
+      <Route path="/trip/ManageTrip" element={<TripsPage />} />
+      <Route path="/invite/:inviteCode" element={<InviteAccept />} />
+
+      {/* Nested routes inside Layout */}
+      <Route path="/" element={<Layout />}>
+        <Route path="profile" element={<Profile />} />
+        <Route path="offer" element={<Offer />} />
+        <Route path="friends" element={<Friends />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="bucketlist" element={<BucketList />} />
+        <Route path="premium" element={<PremiumFeatures />} />
+      </Route>
+    </Routes>
   );
 };
 
