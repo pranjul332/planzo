@@ -13,8 +13,15 @@ import {
   ChevronUp,
   GitBranch,
   IndianRupee,
-  IndianRupeeIcon,
+  Copy,
+  Share2,
+  Mail,
+  MessageSquare,
+  CheckCircle,
+  Clock,
+  Link as LinkIcon,
 } from "lucide-react";
+import { toast } from "react-toastify";
 import {
   LineChart,
   Line,
@@ -49,6 +56,8 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
   const [inviteLink, setInviteLink] = useState("");
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState("link");
   const { generateInviteLink } = useInvitationService();
 
   const {
@@ -222,7 +231,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
       setShowInviteModal(true);
     } catch (error) {
       console.error("Failed to generate invite link:", error);
-      alert("Failed to generate invite link. Please try again.");
+      toast.error("Failed to generate invite link. Please try again.");
     } finally {
       setIsGeneratingLink(false);
     }
@@ -230,41 +239,213 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
   // Function to copy invite link to clipboard
   const handleCopyLink = () => {
     navigator.clipboard.writeText(inviteLink);
-    alert("Invite link copied to clipboard!");
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
   };
+
+  const handleEmailShare = () => {
+    const subject = encodeURIComponent(`Join my trip on TripPlanner`);
+    const body = encodeURIComponent(
+      `Hey! I'd like to invite you to join my trip. Click the link to join: ${inviteLink}`
+    );
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+  };
+
+  // Function to share via WhatsApp
+  const handleWhatsAppShare = () => {
+    const text = encodeURIComponent(
+      `Hey! I'd like to invite you to join my trip on TripPlanner. Click the link to join: ${inviteLink}`
+    );
+    window.open(`https://wa.me/?text=${text}`);
+  };
+
+  // Function to share using Web Share API if available
+  const handleWebShare = () => {
+    try {
+      // Ensure the link is a valid URL with protocol
+      let shareUrl = inviteLink;
+
+      // Add https:// protocol if missing
+      if (inviteLink && !inviteLink.match(/^https?:\/\//)) {
+        shareUrl = `https://${inviteLink}`;
+      }
+
+      // Validate URL format
+      try {
+        new URL(shareUrl);
+      } catch (e) {
+        console.error("Invalid URL format:", shareUrl);
+        // Fall back to copy if URL is invalid
+        handleCopyLink();
+        return;
+      }
+
+      if (navigator.share) {
+        navigator
+          .share({
+            title: "Join my trip on TripPlanner",
+            text: "Hey! I'd like to invite you to join my trip.",
+            url: shareUrl,
+          })
+          .catch((error) => {
+            console.log("Error sharing:", error);
+            // Fall back to copy on share error
+            handleCopyLink();
+          });
+      } else {
+        // Fall back to copy if Web Share API not available
+        handleCopyLink();
+      }
+    } catch (error) {
+      console.error("Share error:", error);
+      // Ultimate fallback
+      handleCopyLink();
+    }
+  };
+
+  // Modal backdrop with blur effect
+  const ModalBackdrop = ({ children }) => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+      {children}
+    </div>
+  );
 
   // Add this in your JSX for the invite modal
   const InviteModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-        <h2 className="text-xl font-semibold mb-4">Invite a Member</h2>
-        <p className="text-gray-600 mb-4">
-          Share this link with someone to invite them to join this trip:
-        </p>
-        <div className="flex items-center mb-6">
-          <input
-            type="text"
-            className="flex-1 p-3 border rounded-l-lg text-sm"
-            value={inviteLink}
-            readOnly
-          />
-          <button
-            onClick={handleCopyLink}
-            className="bg-purple-600 text-white px-4 py-3 rounded-r-lg hover:bg-purple-700"
-          >
-            Copy
-          </button>
-        </div>
-        <div className="flex justify-end">
+    <ModalBackdrop>
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl animate-scaleIn">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-2xl font-bold text-purple-800">Invite to Trip</h2>
           <button
             onClick={() => setShowInviteModal(false)}
-            className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+            className="text-gray-500 hover:text-gray-700 transition-colors rounded-full p-1 hover:bg-gray-100"
+            aria-label="Close"
           >
-            Close
+            <X className="w-6 h-6" />
           </button>
         </div>
+
+        {/* Tabs for different sharing methods */}
+        <div className="mb-5 border-b">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setActiveTab("link")}
+              className={`py-2 px-4 text-sm font-medium transition-colors ${
+                activeTab === "link"
+                  ? "text-purple-700 border-b-2 border-purple-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <LinkIcon className="w-4 h-4" />
+                Link
+              </div>
+            </button>
+
+           
+
+            <button
+              onClick={() => setActiveTab("share")}
+              className={`py-2 px-4 text-sm font-medium transition-colors ${
+                activeTab === "share"
+                  ? "text-purple-700 border-b-2 border-purple-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Share2 className="w-4 h-4" />
+                Share
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Tab content */}
+        <div className="mb-6">
+          {activeTab === "link" && (
+            <div className="space-y-4 animate-fadeIn">
+              <p className="text-gray-600 mb-2 font-medium">
+                Share this link with friends to invite them:
+              </p>
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  className="flex-1 p-3 border border-gray-300 rounded-l-lg text-sm bg-gray-50 focus:ring-2 focus:ring-purple-200 focus:outline-none"
+                  value={inviteLink}
+                  readOnly
+                />
+                <button
+                  onClick={handleCopyLink}
+                  className={`${
+                    copySuccess
+                      ? "bg-green-600"
+                      : "bg-purple-600 hover:bg-purple-700"
+                  } text-white px-4 py-3 rounded-r-lg transition-colors flex items-center gap-1 font-medium`}
+                  aria-label="Copy invite link"
+                >
+                  {copySuccess ? (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "share" && (
+            <div className="animate-fadeIn">
+              <p className="text-gray-600 mb-4 font-medium">Share via:</p>
+              <div className="grid grid-cols-3 gap-3">
+                <ShareButton
+                  onClick={handleWebShare}
+                  icon={<Share2 className="w-6 h-6 text-purple-600 mb-2" />}
+                  label="Share"
+                />
+
+                <ShareButton
+                  onClick={handleEmailShare}
+                  icon={<Mail className="w-6 h-6 text-purple-600 mb-2" />}
+                  label="Email"
+                />
+
+                <ShareButton
+                  onClick={handleWhatsAppShare}
+                  icon={
+                    <MessageSquare className="w-6 h-6 text-purple-600 mb-2" />
+                  }
+                  label="WhatsApp"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5 flex items-center justify-center py-3 bg-purple-50 rounded-lg">
+          <Clock className="w-4 h-4 text-purple-600 mr-2" />
+          <div className="text-purple-700 text-sm font-medium">
+            This invite link will expire in 7 days
+          </div>
+        </div>
       </div>
-    </div>
+    </ModalBackdrop>
+  );
+
+  // Share button component
+  const ShareButton = ({ onClick, icon, label }) => (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center justify-center bg-gray-50 hover:bg-purple-50 border border-gray-200 transition-colors p-4 rounded-xl hover:shadow-md"
+    >
+      {icon}
+      <span className="text-sm font-medium">{label}</span>
+    </button>
   );
 
   const safeTrip = {
@@ -545,17 +726,25 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
             {/* Members */}
             <div className="bg-gray-50 rounded-xl p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
+                <h2 className="text-xl font-bold flex items-center gap-2">
                   <Users className="w-6 h-6 text-purple-600" />
-                  Members
+                  <span className="text-gray-800">Members</span>
                 </h2>
                 <button
                   onClick={handleInviteMember}
                   disabled={isGeneratingLink}
-                  className="text-purple-600 hover:text-purple-700 flex items-center gap-2 font-medium"
+                  className={`
+            px-4 py-2 rounded-lg font-medium 
+            ${
+              isGeneratingLink
+                ? "bg-purple-100 text-purple-400"
+                : "bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
+            } 
+            transition-all flex items-center gap-2
+          `}
                 >
                   <Plus className="w-5 h-5" />
-                  {isGeneratingLink ? "Generating..." : "Add Member"}
+                  {isGeneratingLink ? "Generating..." : "Invite Member"}
                 </button>
               </div>
               <div className="space-y-4">
