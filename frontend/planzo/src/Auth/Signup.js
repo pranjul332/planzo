@@ -7,25 +7,21 @@ const SignUp = () => {
     useAuth0();
   const [isSaving, setIsSaving] = useState(false);
 
-  console.log("Current User", user);
-
   useEffect(() => {
     const saveUserDetails = async () => {
       if (user) {
         setIsSaving(true);
         try {
-           const userData = {
-             email: user.email,
-             name: user.name,
-             picture: user.picture,
-             sub: user.sub,
-           };
-          console.log("Sending user data:", userData); // Add this line to see the complete data
+          const userData = {
+            email: user.email,
+            name: user.name,
+            picture: user.picture,
+            sub: user.sub,
+          };
           await axios.post("http://localhost:5000/api/users", userData);
           console.log("User details saved");
         } catch (error) {
           console.error("Error saving user details:", error);
-          // Log the specific error response data
           if (error.response) {
             console.error("Error response data:", error.response.data);
           }
@@ -41,53 +37,75 @@ const SignUp = () => {
   }, [user]);
 
   const handleLogin = () => {
-    // Optimize Auth0 login by specifying prompt behavior
     loginWithRedirect({
       prompt: "login",
-      connection: "your-connection-name", // Specify your main connection
+      connection: "your-connection-name",
       ui_locales: "en",
       scope: "openid profile email",
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-2">
+        <div className="w-5 h-5 border-2 border-blue-600 rounded-full animate-spin border-t-transparent"></div>
+        <span className="ml-2 text-blue-600 font-medium">Loading...</span>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <header className="flex items-center space-x-4 p-4">
-        {isAuthenticated ? (
-          <div className="flex items-center">
-            {user.picture && (
-              <img
-                src={user.picture}
-                alt="Profile"
-                className="w-10 h-10 rounded-full mr-3"
-              />
-            )}
-            <div>
-              <p className="font-medium">{user.name}</p>
-              <button
-                onClick={() => logout({ returnTo: window.location.origin })}
-                className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Logout
-              </button>
-            </div>
+    <div className="flex items-center">
+      {isAuthenticated ? (
+        <div className="flex items-center rounded-full  transition-all ">
+          {user.picture && (
+            <img
+              src={user.picture}
+              alt="Profile"
+              className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+            />
+          )}
+          <div className="ml-2 mr-1 flex flex-col">
+            <span className="text-sm font-medium truncate max-w-[120px]">
+              {user.name}
+            </span>
+            <button
+              onClick={() => logout({ returnTo: window.location.origin })}
+              className="text-xs text-gray-600 hover:text-gray-800 text-left font-medium"
+            >
+              Sign out
+            </button>
           </div>
-        ) : (
-          <button
-            onClick={() =>
-              loginWithRedirect({
-                prompt: "login",
-                connection: "your-connection-name", // Specify your main connection
-                ui_locales: "en",
-                scope: "openid profile email",
-              })
-            }
-            className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        </div>
+      ) : (
+        <button
+          onClick={handleLogin}
+          className="flex items-center bg-gradient-to-r from-blue-600 to-purple-600 text-white   transition-all duration-300 font-medium"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            Login
-          </button>
-        )}
-      </header>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+            />
+          </svg>
+          Sign In
+        </button>
+      )}
+
+      {isSaving && (
+        <div className="ml-2 text-xs text-gray-500 flex items-center">
+          <div className="w-3 h-3 border-2 border-gray-400 rounded-full animate-spin border-t-transparent mr-1"></div>
+          Syncing...
+        </div>
+      )}
     </div>
   );
 };

@@ -20,12 +20,13 @@ import PremiumFeatures from "./Pages/SidebarPage/PremiumFeatures";
 // Auth components
 import ProtectedRoute from "./Auth/ProtectedRoute";
 import InviteAccept from "./Pages/MyTripPage/tripInvitation/InviteAcc";
+import Front from "./Pages/frontPage/Front";
 
 const App = () => {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Front/>} />
       <Route path="/flights" element={<Home />} />
       <Route path="/hotels" element={<Home />} />
       <Route path="/holidays" element={<Home />} />
