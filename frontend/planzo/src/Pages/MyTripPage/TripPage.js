@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import React, { useState, useEffect } from "react";
 import { User, Plus, Search, Plane, Palmtree, Rainbow } from "lucide-react";
 import Sidebar from "./Sidebar";
@@ -44,9 +45,11 @@ const TripsPage = () => {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Get tripService methods from the hook
   const { getTrips, getTripById } = useTripService();
+  const { user, isAuthenticated, isLoading } = useAuth0();
 
   // Fetch trips on component mount
   useEffect(() => {
@@ -58,7 +61,7 @@ const TripsPage = () => {
     try {
       setLoading(true);
       const fetchedTrips = await getTrips();
-      console.log(fetchedTrips)
+      console.log(fetchedTrips);
       // Format the trips data to ensure consistent structure
       const formattedTrips = fetchedTrips.map((trip) => ({
         id: trip.id,
@@ -169,6 +172,29 @@ const TripsPage = () => {
     }
   };
 
+  // Filter trips based on search query
+  const filteredTrips = trips.filter((trip) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+
+    return (
+      trip.name.toLowerCase().includes(query) ||
+      trip.description.toLowerCase().includes(query) ||
+      trip.mainDestination.toLowerCase().includes(query) ||
+      trip.sideDestinations.some((dest) => dest.toLowerCase().includes(query))
+    );
+  });
+
+  // Handle search query change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Clear search query
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
       <header className="bg-white shadow-lg fixed top-0 left-0 right-0 z-10">
@@ -194,8 +220,19 @@ const TripsPage = () => {
                 <input
                   type="text"
                   placeholder="Search your adventures... 🔍"
-                  className="pl-12 pr-6 py-3 w-72 rounded-full border-2 border-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 hover:border-purple-200"
+                  className="pl-12 pr-12 py-3 w-72 rounded-full border-2 border-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 hover:border-purple-200"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
                 />
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-4 text-gray-400 hover:text-gray-600"
+                    aria-label="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
 
               <div
@@ -203,7 +240,15 @@ const TripsPage = () => {
                 onMouseEnter={() => setIsSidebarOpen(true)}
               >
                 <button className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center hover:opacity-90 transition-opacity">
-                  <User className="w-6 h-6 text-white" />
+                  {!isLoading && isAuthenticated && user?.picture ? (
+                    <img
+                      src={user.picture}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
+                    />
+                  ) : (
+                    <User className="w-6 h-6 text-white" />
+                  )}
                 </button>
               </div>
             </div>
@@ -241,11 +286,31 @@ const TripsPage = () => {
                   Try Again
                 </button>
               </div>
-            ) : trips.length === 0 ? (
-              <EmptyState />
+            ) : filteredTrips.length === 0 ? (
+              searchQuery ? (
+                <div className="text-center py-16">
+                  <div className="flex justify-center mb-6">
+                    <Search className="w-16 h-16 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    No trips found matching "{searchQuery}"
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    Try a different search term or create a new trip!
+                  </p>
+                  <button
+                    onClick={clearSearch}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              ) : (
+                <EmptyState />
+              )
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {trips.map((trip) => (
+                {filteredTrips.map((trip) => (
                   <TripCard
                     key={trip.id}
                     trip={trip}

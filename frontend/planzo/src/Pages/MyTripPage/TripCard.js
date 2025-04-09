@@ -65,39 +65,7 @@ const TripCard = ({ trip, onClick }) => {
       className="cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow relative p-5 border border-gray-100"
     >
       <div className="absolute top-4 right-4">
-        <button
-          ref={buttonRef}
-          onClick={handleMenuClick}
-          className="p-1.5 hover:bg-gray-100 rounded-full"
-        >
-          <MoreVertical className="w-5 h-5 text-gray-500" />
-        </button>
-
-        {showMenu && (
-          <div
-            ref={menuRef}
-            className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-10"
-          >
-            <button
-              onClick={(e) => handleMenuItemClick(e, "edit")}
-              className="w-full text-left px-4 py-2 hover:bg-gray-50"
-            >
-              Edit Trip
-            </button>
-            <button
-              onClick={(e) => handleMenuItemClick(e, "share")}
-              className="w-full text-left px-4 py-2 hover:bg-gray-50"
-            >
-              Share Trip
-            </button>
-            <button
-              onClick={(e) => handleMenuItemClick(e, "delete")}
-              className="w-full text-left px-4 py-2 hover:bg-gray-50 text-red-600"
-            >
-              Delete Trip
-            </button>
-          </div>
-        )}
+        
       </div>
 
       <h3 className="text-lg font-semibold mb-2">

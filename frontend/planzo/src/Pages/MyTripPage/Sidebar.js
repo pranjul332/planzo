@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,6 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 
+
 const SidebarItem = ({ icon, text, onClick }) => {
   return (
     <button
@@ -23,7 +25,9 @@ const SidebarItem = ({ icon, text, onClick }) => {
   );
 };
 
-const Sidebar = ({ isOpen, closeSidebar, user }) => {
+const Sidebar = ({ isOpen, closeSidebar }) => {
+
+  const { user,isAuthenticated,isLoading,logout } = useAuth0();
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
 
@@ -73,11 +77,13 @@ const Sidebar = ({ isOpen, closeSidebar, user }) => {
 
         <div className="flex flex-col items-center mb-6 mt-8">
           <div className="w-20 h-20 bg-gray-200 rounded-full mb-2">
-            <img
-              src="/api/placeholder/80/80"
-              alt="Profile"
-              className="w-full h-full rounded-full object-cover"
-            />
+            {!isLoading && isAuthenticated && user?.picture && (
+              <img
+                src={user.picture}
+                alt="Profile"
+                className=" rounded-full border-2 border-white shadow-sm"
+              />
+            )}
           </div>
           <span className="font-medium text-gray-800">
             {user?.name || "Guest"}
@@ -119,7 +125,11 @@ const Sidebar = ({ isOpen, closeSidebar, user }) => {
         </nav>
 
         <div className="absolute bottom-4 left-0 w-full px-4">
-          <SidebarItem icon={<LogOut />} text="Logout" onClick={handleLogout} />
+          <SidebarItem
+            icon={<LogOut />}
+            text="Logout"
+            onClick={() => logout({ returnTo: window.location.origin })}
+          />
         </div>
       </div>
     </div>
