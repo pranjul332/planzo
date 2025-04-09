@@ -13,6 +13,7 @@ import {
   RefreshCw,
   ChevronRight,
   Star,
+  Palmtree
 } from "lucide-react";
 import balloon from '../../images/balloon.png'
 import Hote from "./Hotel"
@@ -40,48 +41,51 @@ const Home = () => {
           {/* Header */}
           <header className="bg-pink-200 py-3 px-4 shadow-sm">
             <div className="max-w-7xl mx-auto flex justify-between items-center">
-              <div className="text-3xl font-bold text-gray-700">Planzo</div>
-              <div className="flex items-center gap-4">
-                <button className="bg-gray-800 text-yellow-500 px-4 py-2 rounded-full">
-                  JOIN <span className="italic">Planzo</span>PRIME
-                </button>
-                <button className=" bg-white flex items-center gap-2 px-4 py-2 rounded-full border">
-                  <Building2 size={20} className="" />
-                  Corporates/SME
-                  <ChevronDown size={16} />
-                </button>
-                <button className="  bg-white  flex items-center gap-2 px-4 py-2 rounded-full border">
-                  <PhoneCall size={20} />
-                  For Travel Agents
-                </button>
-                <button >
-                  <SignUp/>
-                </button>
-              </div>
+              <Link to="/" className="flex items-center space-x-1">
+                <div className="relative">
+                  <Palmtree
+                    className="w-8 h-8 text-transparent"
+                    stroke="url(#logoGradient)"
+                    strokeWidth={2}
+                  />
+                  <svg width="0" height="0">
+                    <linearGradient
+                      id="logoGradient"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="0%"
+                    >
+                      <stop offset="0%" stopColor="#2563eb" /> {/* blue-600 */}
+                      <stop offset="100%" stopColor="#9333ea" />{" "}
+                      {/* purple-600 */}
+                    </linearGradient>
+                  </svg>
+                </div>
+                <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+                  Planzo
+                </div>
+              </Link>
             </div>
           </header>
           {/* Main Content */}
 
           {/* Buttons to switch between Flight and Hotel */}
           <div>
-
             {/* Buttons to switch between Flight and Hotel */}
             <div style={{ margin: "20px 0" }}>
               {activeComponent === "flight" ? (
                 <Fligh setActiveComponent={setActiveComponent} />
-              ) : activeComponent==="hotel" ? (
+              ) : activeComponent === "hotel" ? (
                 <Hote setActiveComponent={setActiveComponent} />
-              ): activeComponent ==="holidays" ? (
-              <Holidays setActiveComponent={setActiveComponent} />
-            )
-            : activeComponent === "bus"?(
-              <Bu setActiveComponent={setActiveComponent} />
-            ):(
-              <Trai setActiveComponent={setActiveComponent} />
-            )}
+              ) : activeComponent === "holidays" ? (
+                <Holidays setActiveComponent={setActiveComponent} />
+              ) : activeComponent === "bus" ? (
+                <Bu setActiveComponent={setActiveComponent} />
+              ) : (
+                <Trai setActiveComponent={setActiveComponent} />
+              )}
             </div>
-
-            
           </div>
 
           {/* <Link to="/flights"></Link>

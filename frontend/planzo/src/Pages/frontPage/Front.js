@@ -22,7 +22,8 @@ import {
   Zap,
   BarChart,
   Route,
-  Briefcase
+  Briefcase,
+  Palmtree
 } from "lucide-react";
 
 import SignUp from "../../Auth/Signup";
@@ -129,6 +130,14 @@ export default function Front() {
       role: "Family Explorer",
       avatar: "/api/placeholder/60/60",
     },
+    {
+      id: 3,
+      quote:
+        "This Site is also helpful for solo traveller in many ways , like various inbuilt tools which are provided",
+      author: "Yurus Cave",
+      role: "Solo Traveller",
+      avatar: "/api/placeholder/60/60",
+    },
   ];
 
  
@@ -223,10 +232,32 @@ export default function Front() {
       >
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-                Planzo
-              </div>
+            <div className="flex items-center space-x-7">
+              <Link to="/" className="flex items-center space-x-1">
+                <div className="relative">
+                  <Palmtree
+                    className="w-8 h-8 text-transparent"
+                    stroke="url(#logoGradient)"
+                    strokeWidth={2}
+                  />
+                  <svg width="0" height="0">
+                    <linearGradient
+                      id="logoGradient"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="0%"
+                    >
+                      <stop offset="0%" stopColor="#2563eb" /> {/* blue-600 */}
+                      <stop offset="100%" stopColor="#9333ea" />{" "}
+                      {/* purple-600 */}
+                    </linearGradient>
+                  </svg>
+                </div>
+                <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+                  Planzo
+                </div>
+              </Link>
               <div className="hidden md:flex space-x-6">
                 <a
                   href="#destinations"
@@ -649,7 +680,6 @@ export default function Front() {
                 Collaborate using the group chat to discuss ideas and make
                 decisions together.
               </p>
-             
             </div>
 
             {/* Step 3 */}
@@ -676,7 +706,6 @@ export default function Front() {
                 Leverage AI trip suggestions, budget estimation, and trip flow
                 planning tools.
               </p>
-              
             </div>
 
             {/* Step 4 */}
@@ -703,7 +732,6 @@ export default function Front() {
                 Finalize your plans and book your trip with our secure payment
                 system.
               </p>
-              
             </div>
           </div>
 
@@ -809,7 +837,7 @@ export default function Front() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8  mx-auto">
             {testimonials.map((testimonial, index) => (
               <div
                 key={testimonial.id}

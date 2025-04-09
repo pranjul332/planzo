@@ -6,6 +6,7 @@ import TripDetails from "./TripDetails";
 import AddMemberModal from "./AddMemberModal";
 import CreateTripModal from "./CreateTrip";
 import { useTripService } from "../../services/tripService";
+import { Link } from "react-router-dom";
 
 const EmptyState = () => (
   <div className="text-center py-16">
@@ -174,7 +175,7 @@ const TripsPage = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
+              <Link to={"/"} className="flex items-center gap-2">
                 <Palmtree className="w-8 h-8 text-purple-500" />
                 <div className="flex flex-col">
                   <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
@@ -184,7 +185,7 @@ const TripsPage = () => {
                     My Adventures ✨
                   </span>
                 </div>
-              </div>
+              </Link>
             </div>
 
             <div className="flex items-center gap-6">
