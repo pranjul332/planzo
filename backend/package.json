@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@socket.io/admin-ui": "^0.5.1",
     "axios": "^1.8.1",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
@@ -24,6 +25,7 @@
     "jwks-rsa": "^3.1.0",
     "mongoose": "^8.10.1",
     "nodemon": "^3.1.9",
+    "socket.io": "^4.8.1",
     "uuid": "^11.1.0"
   }
 }
