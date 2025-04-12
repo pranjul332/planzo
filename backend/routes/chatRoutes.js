@@ -1,9 +1,13 @@
+const dotenv = require("dotenv");
 const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const GroupChat = require("../db/schema/Chat");
 const Trip = require("../db/schema/Trips");
 const { getUserInfo } = require("../utils/auth0service");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { jsonrepair } = require("jsonrepair");
+
 
 // Create a new group chat for a trip
 router.post("/:tripId", async (req, res) => {
@@ -57,6 +61,7 @@ router.get("/trip/:tripId", async (req, res) => {
   try {
     const { tripId } = req.params;
     const auth0Id = req.userId;
+    authId =auth0Id
 
     // Find a group chat associated with the trip where the user is a member
     const groupChat = await GroupChat.findOne({
@@ -465,5 +470,123 @@ router.delete('/:chatId/notes/:noteId', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
+// AI Trip Planning Route
+router.post('/:chatId/ai-trip', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { destinations, numDays, budget, numMembers, quality } = req.body;
+     const auth0Id = req.userId;
+
+    // Initialize Gemini AI
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+
+    // Create prompt for the AI
+    const prompt = `As an AI travel planner, create a detailed trip plan for ${numMembers} people visiting ${destinations.join(
+      ", "
+    )} for ${numDays} days with a budget of $${budget}. The trip quality should be ${quality}. Provide a structured response with specific costs and suggestions for accommodation, activities, food, and transportation. Include a day-by-day itinerary. Return ONLY a JSON object with no additional text or markdown formatting.
+
+The response should follow this exact structure:
+{
+  "accommodation": {
+    "cost": number,
+    "suggestions": ["suggestion1", "suggestion2", ...]
+  },
+  "activities": {
+    "cost": number,
+    "suggestions": ["activity1", "activity2", ...]
+  },
+  "food": {
+    "cost": number,
+    "suggestions": ["food1", "food2", ...]
+  },
+  "transportation": {
+    "cost": number,
+    "suggestions": ["transport1", "transport2", ...]
+  },
+  "totalCost": number,
+  "itinerary": ["day 1 plan", "day 2 plan", ...]
+}`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    let responseText = response.text();
+    
+    // Clean up the response text to ensure valid JSON
+    responseText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+    
+    try {
+      const tripPlan = JSON.parse(responseText);
+
+      // Validate the structure of the parsed JSON
+      const requiredFields = [
+        "accommodation",
+        "activities",
+        "food",
+        "transportation",
+        "totalCost",
+        "itinerary",
+      ];
+      const missingFields = requiredFields.filter((field) => !tripPlan[field]);
+
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
+      }
+
+      // Save the trip plan to the chat
+      const groupChat = await GroupChat.findOne({
+        chatId,
+        "members.auth0Id": auth0Id,
+      });
+      if (!groupChat) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+
+      // Find the member to get their name
+      const member = groupChat.members.find((m) => m.auth0Id === auth0Id);
+
+      // Create a new message with the AI trip plan as an attachment
+      const newMessage = {
+        sender: auth0Id,
+        senderName: member ? member.name : "AI Trip Planner",
+        content: "Generated a new trip plan",
+        timestamp: new Date(),
+        attachments: [
+          {
+            type: "ai-trip-plan",
+            data: tripPlan,
+          },
+        ],
+      };
+
+      // Add the message to the chat
+      groupChat.messages.push(newMessage);
+
+      // Also store the trip plan in the dedicated field
+      groupChat.aiTripPlan = tripPlan;
+
+      await groupChat.save();
+
+      res.json(tripPlan);
+    } catch (parseError) {
+      console.error('Error parsing AI response:', parseError);
+      console.error('Raw response:', responseText);
+      res.status(500).json({ 
+        message: 'Error parsing AI response',
+        error: parseError.message,
+        rawResponse: responseText 
+      });
+    }
+  } catch (error) {
+    console.error('Error generating AI trip plan:', error);
+    res.status(500).json({ 
+      message: 'Error generating trip plan',
+      error: error.message 
+    });
+  }
+});
+
+
 
 module.exports = router;

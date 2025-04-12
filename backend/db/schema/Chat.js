@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
+
+const attachmentSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      required: true,
+      enum: ["image", "file", "ai-trip-plan"],
+    },
+    data: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 const messageSchema = new mongoose.Schema({
   sender: {
     type: String,
@@ -17,11 +33,7 @@ const messageSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  attachments: [
-    {
-      type: String,
-    },
-  ],
+  attachments: [attachmentSchema],
 });
 
 const tripCostSchema = new mongoose.Schema(
@@ -66,6 +78,30 @@ const noteSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+  },
+  { _id: false }
+);
+
+const aiTripPlanSchema = new mongoose.Schema(
+  {
+    accommodation: {
+      cost: Number,
+      suggestions: [String],
+    },
+    activities: {
+      cost: Number,
+      suggestions: [String],
+    },
+    food: {
+      cost: Number,
+      suggestions: [String],
+    },
+    transportation: {
+      cost: Number,
+      suggestions: [String],
+    },
+    totalCost: Number,
+    itinerary: [String],
   },
   { _id: false }
 );
@@ -150,6 +186,8 @@ const groupChatSchema = new mongoose.Schema(
       },
     },
     notes: [noteSchema],
+
+    aiTripPlan: aiTripPlanSchema,
   },
   {
     timestamps: true,

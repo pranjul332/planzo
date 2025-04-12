@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
     "@socket.io/admin-ui": "^0.5.1",
     "axios": "^1.8.1",
     "bcryptjs": "^3.0.2",
@@ -21,6 +22,7 @@
     "express-jwt": "^8.5.1",
     "express-oauth2-jwt-bearer": "^1.6.0",
     "express-validator": "^7.2.1",
+    "jsonrepair": "^3.12.0",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.1.0",
     "mongoose": "^8.10.1",

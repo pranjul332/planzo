@@ -6,6 +6,7 @@ const TripInvitation = require("../db/schema/TripInvite")
 const { v4: uuidv4 } = require("uuid");
 const {getUserInfo} =require("../utils/auth0service")
 
+
 // Get all trips for the current user
 router.get("/", async (req, res) => {
   try {

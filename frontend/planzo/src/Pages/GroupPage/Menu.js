@@ -15,10 +15,14 @@ import TripCost from "./menuFunctionality/TripCost";
 import PriceEstimator from "./menuFunctionality/PriceEstimator";
 import Suggestions from "./menuFunctionality/Suggestions";
 import Notes from "./menuFunctionality/Notes";
-import AItrip from "./menuFunctionality/AItrip";
+import AiTripPlanner from "./menuFunctionality/AItrip";
+import TripPlanDisplay from "./menuFunctionality/AitripDisplay";
+import { useParams } from "react-router-dom";
 
 const Menu = ({ isOpen, onClose, tripData }) => {
   const [activeTab, setActiveTab] = useState("tripGraph");
+  const [tripPlan, setTripPlan] = useState(null); // For AI trip plan result
+  const chatId = useParams()
 
   const menuItems = [
     { id: "tripGraph", icon: BarChart3, label: "Trip Graph" },
@@ -83,7 +87,17 @@ const Menu = ({ isOpen, onClose, tripData }) => {
           )}
           {activeTab === "suggestions" && <Suggestions tripData={tripData} />}
           {activeTab === "notes" && <Notes tripData={tripData} />}
-          {activeTab === "AItrip" && <AItrip tripData={tripData} />}
+
+          {activeTab === "AItrip" && (
+            <>
+              <AiTripPlanner chatId={chatId} onPlanGenerated={setTripPlan} />
+              {tripPlan && (
+                <div className="mt-6">
+                  <TripPlanDisplay plan={tripPlan} />
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

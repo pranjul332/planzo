@@ -14,6 +14,8 @@ const Destinations = ({ tripData = {} }) => {
   const { chatId } = useParams();
   const { addDestinations, getDestinations } = useGroupChatService();
 
+  
+
   // Default destinations if none provided
   const defaultDestinations = [
     {
