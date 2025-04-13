@@ -802,6 +802,290 @@ router.get('/:chatId/ai-suggestions/:city', async (req, res) => {
   }
 });
 
+// AI Cost Estimation Route
+router.post('/:chatId/cost-estimate', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { 
+      city, 
+      category, 
+      details,
+      numPeople,
+      duration,
+      quality,
+      additionalInfo 
+    } = req.body;
+    const auth0Id = req.userId;
+
+    // Parameter validation
+    if (!city || !category) {
+      return res.status(400).json({ 
+        message: 'City and category are required'
+      });
+    }
+
+    // Find the group chat and verify user access
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res.status(404).json({ 
+        message: "Chat not found or access denied" 
+      });
+    }
+
+    // Initialize Gemini AI
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Using free version
+
+    // Create dynamic prompt based on category
+    let categorySpecificPrompt = "";
+    switch(category) {
+      case "accommodation":
+        categorySpecificPrompt = `For ${numPeople} people staying in ${city} for ${duration} days/nights with a ${quality} preference. Accommodation type: ${details.type || "various"}. Include price ranges for different neighborhoods.`;
+        break;
+      case "food":
+        categorySpecificPrompt = `For ${numPeople} people in ${city} for ${duration} days with ${details.mealsPerDay || 3} meals per day at ${quality} dining establishments. Include costs for local specialties.`;
+        break;
+      case "activities":
+        categorySpecificPrompt = `For popular activities and attractions in ${city} for ${numPeople} people. Include entrance fees for key attractions, guided tours, and ${details.activityType || "various"} activities.`;
+        break;
+      case "transportation":
+        categorySpecificPrompt = `For getting around ${city} using ${details.transportType || "various"} transportation options for ${numPeople} people for ${duration} days. Include public transit costs, taxi estimates, and rental options.`;
+        break;
+      case "daily":
+        categorySpecificPrompt = `Overall daily living costs in ${city} for ${numPeople} people including average expenses across all categories (food, transport, entertainment, etc.) for ${quality} level travelers.`;
+        break;
+      default:
+        categorySpecificPrompt = `General cost information for ${category} in ${city} for ${numPeople} people.`;
+    }
+
+    // Create the complete prompt for the AI
+    const prompt = `As a travel cost expert, provide a detailed cost analysis for ${city} regarding ${category} costs.
+
+${categorySpecificPrompt}
+
+Additional context: ${additionalInfo || "None provided"}
+
+Return ONLY a JSON object with no additional text, markdown, or code block formatting, structured exactly as follows:
+{
+  "low": {
+    "amount": number,
+    "currency": "USD",
+    "description": "Budget-friendly estimate explanation"
+  },
+  "medium": {
+    "amount": number,
+    "currency": "USD",
+    "description": "Mid-range estimate explanation"
+  },
+  "high": {
+    "amount": number,
+    "currency": "USD",
+    "description": "Premium estimate explanation"
+  },
+  "breakdown": [
+    {
+      "item": "specific cost item name",
+      "lowCost": number,
+      "highCost": number,
+      "notes": "Extra information about this cost"
+    }
+  ],
+  "tips": [
+    "money-saving tip 1",
+    "money-saving tip 2"
+  ],
+  "totalEstimatedCost": number,
+  "perPersonPerDay": number
+}`;
+
+    // Generate AI response
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    let responseText = response.text();
+    
+    // Clean up the response text to ensure valid JSON
+    responseText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+    
+    try {
+      // Parse JSON response
+      const costEstimate = JSON.parse(responseText);
+      
+      // Find the member to get their name
+      const member = groupChat.members.find(m => m.auth0Id === auth0Id);
+      
+      // Create a new message with the cost estimate as an attachment
+      const newMessage = {
+        sender: auth0Id,
+        senderName: member ? member.name : "Unknown User",
+        content: `Generated cost estimate for ${category} in ${city}`,
+        timestamp: new Date(),
+        attachments: [
+          {
+            type: "ai-trip-plan", // Reusing existing attachment type
+            data: {
+              type: "cost-estimate",
+              city,
+              category,
+              details: {
+                numPeople,
+                duration,
+                quality,
+                ...details
+              },
+              estimate: costEstimate
+            }
+          }
+        ]
+      };
+      
+      // Add the message to the chat
+      groupChat.messages.push(newMessage);
+      await groupChat.save();
+      
+      res.json({
+        city,
+        category,
+        estimate: costEstimate
+      });
+    } catch (parseError) {
+      console.error('Error parsing AI response:', parseError);
+      
+      // Try to repair the JSON
+      try {
+        const repairedJson = jsonrepair(responseText);
+        const costEstimate = JSON.parse(repairedJson);
+        
+        // Find the member to get their name
+        const member = groupChat.members.find(m => m.auth0Id === auth0Id);
+        
+        // Create a new message with the cost estimate as an attachment
+        const newMessage = {
+          sender: auth0Id,
+          senderName: member ? member.name : "Unknown User",
+          content: `Generated cost estimate for ${category} in ${city}`,
+          timestamp: new Date(),
+          attachments: [
+            {
+              type: "ai-trip-plan", // Reusing existing attachment type
+              data: {
+                type: "cost-estimate",
+                city,
+                category,
+                details: {
+                  numPeople,
+                  duration,
+                  quality,
+                  ...details
+                },
+                estimate: costEstimate
+              }
+            }
+          ]
+        };
+        
+        // Add the message to the chat
+        groupChat.messages.push(newMessage);
+        await groupChat.save();
+        
+        res.json({
+          city,
+          category,
+          estimate: costEstimate
+        });
+      } catch (repairError) {
+        res.status(500).json({ 
+          message: 'Error processing AI response',
+          error: parseError.message,
+          rawResponse: responseText 
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error generating cost estimate:', error);
+    res.status(500).json({ 
+      message: 'Error generating cost estimate',
+      error: error.message 
+    });
+  }
+});
+
+// Get saved cost estimates for a chat
+router.get('/:chatId/cost-estimates', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { city, category } = req.query;
+    const auth0Id = req.userId;
+
+    // Find the group chat and ensure the user is a member
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res.status(404).json({ 
+        message: "Group chat not found or access denied" 
+      });
+    }
+
+    // Find messages with cost estimates
+    let estimateMessages = groupChat.messages.filter(message => 
+      message.attachments && 
+      message.attachments.some(attachment => 
+        attachment.type === "ai-trip-plan" && 
+        attachment.data && 
+        attachment.data.type === "cost-estimate"
+      )
+    );
+
+    // Apply filters if provided
+    if (city) {
+      estimateMessages = estimateMessages.filter(message =>
+        message.attachments.some(att => 
+          att.data.city && att.data.city.toLowerCase() === city.toLowerCase()
+        )
+      );
+    }
+
+    if (category) {
+      estimateMessages = estimateMessages.filter(message =>
+        message.attachments.some(att => 
+          att.data.category && att.data.category === category
+        )
+      );
+    }
+
+    if (estimateMessages.length === 0) {
+      return res.status(404).json({
+        message: `No saved cost estimates found${city ? ` for ${city}` : ''}${category ? ` regarding ${category}` : ''}`
+      });
+    }
+
+    // Extract cost estimates from messages
+    const estimates = estimateMessages.map(message => {
+      const attachment = message.attachments.find(
+        att => att.data.type === "cost-estimate"
+      );
+      return {
+        id: message._id,
+        timestamp: message.timestamp,
+        ...attachment.data
+      };
+    });
+
+    res.json(estimates);
+  } catch (error) {
+    console.error('Error fetching cost estimates:', error);
+    res.status(500).json({ 
+      message: 'Error fetching cost estimates',
+      error: error.message 
+    });
+  }
+});
 
 
 module.exports = router;
