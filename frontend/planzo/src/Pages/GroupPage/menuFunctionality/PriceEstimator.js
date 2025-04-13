@@ -29,7 +29,7 @@ const CostEstimator = ({  onSaved }) => {
   const [showSaved, setShowSaved] = useState(false);
   const {chatId} = useParams()
   const { getAccessTokenSilently } = useAuth0();
-  
+
   const [formData, setFormData] = useState({
     city: "",
     category: "",
@@ -442,7 +442,7 @@ const CostEstimator = ({  onSaved }) => {
                   {categories.find((c) => c.id === item.category)?.label}
                 </span>
                 <span className="text-green-600 font-medium ml-auto">
-                  ${item.estimate.totalEstimatedCost}
+                  ₹{item.estimate.totalEstimatedCost}
                 </span>
               </div>
             </div>
@@ -495,7 +495,7 @@ const CostEstimator = ({  onSaved }) => {
             <div className="bg-white p-3 rounded border text-center">
               <p className="text-xs text-gray-500">Budget</p>
               <p className="text-lg font-semibold text-green-600">
-                ${estimate.low.amount}
+                ₹{estimate.low.amount}
               </p>
               <p className="text-xs text-gray-600 line-clamp-2">
                 {estimate.low.description}
@@ -504,7 +504,7 @@ const CostEstimator = ({  onSaved }) => {
             <div className="bg-white p-3 rounded border text-center shadow-md">
               <p className="text-xs text-gray-500">Standard</p>
               <p className="text-xl font-semibold text-blue-600">
-                ${estimate.medium.amount}
+                ₹{estimate.medium.amount}
               </p>
               <p className="text-xs text-gray-600 line-clamp-2">
                 {estimate.medium.description}
@@ -513,7 +513,7 @@ const CostEstimator = ({  onSaved }) => {
             <div className="bg-white p-3 rounded border text-center">
               <p className="text-xs text-gray-500">Premium</p>
               <p className="text-lg font-semibold text-purple-600">
-                ${estimate.high.amount}
+                ₹{estimate.high.amount}
               </p>
               <p className="text-xs text-gray-600 line-clamp-2">
                 {estimate.high.description}
@@ -528,7 +528,7 @@ const CostEstimator = ({  onSaved }) => {
                 <div key={i} className="flex justify-between text-sm">
                   <span>{item.item}</span>
                   <span className="font-medium">
-                    ${item.lowCost} - ${item.highCost}
+                    ₹{item.lowCost} - ₹{item.highCost}
                   </span>
                 </div>
               ))}
@@ -555,13 +555,13 @@ const CostEstimator = ({  onSaved }) => {
             <div>
               <div className="text-sm text-gray-600">Total Estimate</div>
               <div className="font-bold text-lg">
-                ${estimate.totalEstimatedCost}
+                ₹{estimate.totalEstimatedCost}
               </div>
             </div>
             {estimate.perPersonPerDay && (
               <div className="text-right">
                 <div className="text-sm text-gray-600">Per Person/Day</div>
-                <div className="font-medium">${estimate.perPersonPerDay}</div>
+                <div className="font-medium">₹{estimate.perPersonPerDay}</div>
               </div>
             )}
           </div>

@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import {
   DollarSign,
+  IndianRupee,
   Bed,
   Utensils,
   Map,
@@ -24,7 +25,7 @@ export default function TripPlanDisplay({ plan }) {
         <div className="flex items-center justify-between mt-4">
           <span className="text-gray-600 text-lg">Total Estimated Cost:</span>
           <div className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-md">
-            <DollarSign className="w-5 h-5" />
+            <IndianRupee className="w-5 h-5" />
             <span className="text-2xl font-bold">
               {plan.totalCost.toLocaleString()}
             </span>
@@ -71,7 +72,7 @@ export default function TripPlanDisplay({ plan }) {
                 {section.title}
               </h3>
               <div className="bg-white text-indigo-600 px-3 py-1 rounded-full font-bold shadow-sm">
-                ${section.data.cost.toLocaleString()}
+                ₹{section.data.cost.toLocaleString()}
               </div>
             </div>
 

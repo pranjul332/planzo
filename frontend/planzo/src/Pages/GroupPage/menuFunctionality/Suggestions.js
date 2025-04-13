@@ -19,11 +19,14 @@ import {
   XCircle,
   AlertCircle,
   Star,
+  Stethoscope,
+  Lightbulb,
 } from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useParams } from "react-router-dom";
 
 const categoryIcons = {
+  protips: Lightbulb,
   weather: ThermometerSun,
   safety: ShieldAlert,
   food: UtensilsCrossed,
@@ -34,9 +37,11 @@ const categoryIcons = {
   events: Calendar,
   culture: Languages,
   transportation: Bus,
+  medical: Stethoscope,
 };
 
 const defaultCategories = [
+  { id: "protips", label: "Pro Travel Tips", icon: Lightbulb },
   { id: "weather", label: "Weather & Best Time", icon: ThermometerSun },
   { id: "safety", label: "Safety Tips", icon: ShieldAlert },
   { id: "food", label: "Food & Cuisine", icon: UtensilsCrossed },
@@ -47,6 +52,7 @@ const defaultCategories = [
   { id: "events", label: "Events & Festivals", icon: Calendar },
   { id: "culture", label: "Culture & Customs", icon: Languages },
   { id: "transportation", label: "Getting Around", icon: Bus },
+  { id: "medical", label: "Medical Essentials", icon: Stethoscope },
 ];
 
 const TripSuggestions = () => {
@@ -166,7 +172,7 @@ const TripSuggestions = () => {
         AI Travel Suggestions
       </h3>
 
-      {/* Search for existing suggestions */}
+      {/* Search for existing suggestions
       <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
         <h4 className="text-sm font-medium text-gray-700 mb-2">
           Find saved suggestions
@@ -187,7 +193,7 @@ const TripSuggestions = () => {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Search"}
           </button>
         </form>
-      </div>
+      </div> */}
 
       {/* Create new suggestions */}
       <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">

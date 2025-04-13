@@ -13,6 +13,13 @@ import {
   ArrowRight,
   Globe,
   Sparkles,
+  Zap,
+  Star,
+  TrendingUp,
+  Bot,
+  Award,
+  Flame,
+  IndianRupee,
 } from "lucide-react";
 import TripGraph from "./menuFunctionality/GraphCompo";
 import Destinations from "./menuFunctionality/Destinations";
@@ -31,6 +38,7 @@ const Menu = ({ isOpen, onClose, tripData }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showTip, setShowTip] = useState(false);
+  const [aiButtonHover, setAiButtonHover] = useState(false);
   const chatId = useParams();
 
   // Track window resize for responsive behavior
@@ -56,13 +64,51 @@ const Menu = ({ isOpen, onClose, tripData }) => {
     }
   }, [isOpen, activeModal]);
 
+  // Add automatic pulsing effect to AI Trip Planner every few seconds
+  useEffect(() => {
+    if (isOpen && !activeModal) {
+      const pulseInterval = setInterval(() => {
+        setAiButtonHover(true);
+        setTimeout(() => setAiButtonHover(false), 1000);
+      }, 5000);
+      return () => clearInterval(pulseInterval);
+    }
+  }, [isOpen, activeModal]);
+
   const menuItems = [
     {
-      id: "tripGraph",
-      icon: BarChart3,
-      label: "Trip Graph",
-      color: "from-blue-500 to-sky-400",
-      description: "Visualize your trip data in charts and graphs",
+      id: "AItrip",
+      icon: BrainCircuit,
+      label: "AI Trip Planner",
+      secondaryIcon: Flame,
+      color: "from-fuchsia-600 to-pink-600",
+      description: "🔥 CREATE YOUR DREAM TRIP IN SECONDS!",
+      isAI: true,
+      featured: true,
+      badge: "HOT",
+      badgeColor: "bg-red-500",
+    },
+    {
+      id: "priceEstimator",
+      icon: IndianRupee,
+      label: "AI Price Estimator",
+      secondaryIcon: Bot,
+      color: "from-purple-500 to-violet-400",
+      description: "Get AI-powered cost estimates for your trip",
+      isAI: true,
+      badge: "AI",
+      badgeColor: "bg-violet-500",
+    },
+    {
+      id: "suggestions",
+      icon: Lightbulb,
+      label: "AI Suggestions",
+      secondaryIcon: Star,
+      color: "from-yellow-500 to-amber-400",
+      description: "Smart AI recommendations for your destination",
+      isAI: true,
+      badge: "AI",
+      badgeColor: "bg-amber-500",
     },
     {
       id: "destinations",
@@ -79,18 +125,11 @@ const Menu = ({ isOpen, onClose, tripData }) => {
       description: "Track and analyze your trip expenses",
     },
     {
-      id: "priceEstimator",
-      icon: DollarSign,
-      label: "Price Estimator",
-      color: "from-purple-500 to-violet-400",
-      description: "Estimate costs for your upcoming travel plans",
-    },
-    {
-      id: "suggestions",
-      icon: Lightbulb,
-      label: "Suggestions",
-      color: "from-yellow-500 to-amber-400",
-      description: "Get personalized travel recommendations",
+      id: "tripGraph",
+      icon: BarChart3,
+      label: "Trip Graph",
+      color: "from-blue-500 to-sky-400",
+      description: "Visualize your trip data in charts and graphs",
     },
     {
       id: "notes",
@@ -98,13 +137,6 @@ const Menu = ({ isOpen, onClose, tripData }) => {
       label: "Important Notes",
       color: "from-red-500 to-rose-400",
       description: "Save important information about your trip",
-    },
-    {
-      id: "AItrip",
-      icon: BrainCircuit,
-      label: "AI Trip Planner",
-      color: "from-indigo-600 to-purple-500",
-      description: "Let AI create your perfect travel itinerary",
     },
   ];
 
@@ -247,69 +279,137 @@ const Menu = ({ isOpen, onClose, tripData }) => {
 
         <div className="flex flex-col h-[calc(100%-4rem)] bg-gray-50">
           <div className="flex flex-col space-y-2 p-3 overflow-y-auto">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleMenuItemClick(item.id)}
-                className={`
-                  flex items-center gap-3 p-3 rounded-xl transition-all relative overflow-hidden
-                  ${
-                    activeModal === item.id
-                      ? `bg-gradient-to-r ${item.color} text-white shadow-md`
-                      : "hover:bg-white hover:shadow-md text-gray-700"
+            {menuItems.map((item) => {
+              const isAiTripPlanner = item.id === "AItrip";
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleMenuItemClick(item.id)}
+                  onMouseEnter={() => isAiTripPlanner && setAiButtonHover(true)}
+                  onMouseLeave={() =>
+                    isAiTripPlanner && setAiButtonHover(false)
                   }
-                  ${isSidebarCollapsed ? "justify-center" : ""}
-                `}
-              >
-                <div
                   className={`
-                  ${activeModal === item.id ? "" : "bg-gray-100"} 
-                  p-2 rounded-lg flex items-center justify-center
-                  ${isSidebarCollapsed ? "w-10 h-10" : "w-8 h-8"}
-                `}
-                >
-                  <item.icon
-                    className={`
-                    ${isSidebarCollapsed ? "w-6 h-6" : "w-4 h-4"}
+                    flex items-center gap-3 p-3 rounded-xl transition-all relative overflow-hidden
                     ${
                       activeModal === item.id
-                        ? "text-white"
-                        : item.id === "AItrip"
-                        ? "text-indigo-600"
-                        : "text-gray-700"
+                        ? `bg-gradient-to-r ${item.color} text-white shadow-md`
+                        : isAiTripPlanner
+                        ? "bg-gradient-to-r from-fuchsia-600/10 to-pink-600/10 hover:from-fuchsia-600/20 hover:to-pink-600/20 text-gray-700 border border-pink-200"
+                        : "hover:bg-white hover:shadow-md text-gray-700"
                     }
+                    ${
+                      isAiTripPlanner &&
+                      (aiButtonHover || activeModal === item.id)
+                        ? "transform scale-105 shadow-lg transition-transform"
+                        : ""
+                    }
+                    ${isAiTripPlanner ? "mb-3 mt-1" : ""}
+                    ${isSidebarCollapsed ? "justify-center" : ""}
                   `}
-                  />
-                </div>
-
-                {!isSidebarCollapsed && (
-                  <div className="flex flex-col text-left">
-                    <span className="font-medium">{item.label}</span>
-                    <span
-                      className={`text-xs ${
+                >
+                  <div
+                    className={`
+                    ${
+                      activeModal === item.id
+                        ? ""
+                        : isAiTripPlanner
+                        ? "bg-gradient-to-br from-fuchsia-100 to-pink-100"
+                        : "bg-gray-100"
+                    } 
+                    p-2 rounded-lg flex items-center justify-center
+                    ${isSidebarCollapsed ? "w-10 h-10" : "w-8 h-8"}
+                    ${isAiTripPlanner ? "animate-pulse-slow" : ""}
+                  `}
+                  >
+                    <item.icon
+                      className={`
+                      ${isSidebarCollapsed ? "w-6 h-6" : "w-4 h-4"}
+                      ${
                         activeModal === item.id
-                          ? "text-white/80"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {item.description}
-                    </span>
+                          ? "text-white"
+                          : isAiTripPlanner
+                          ? "text-fuchsia-600"
+                          : item.isAI
+                          ? "text-indigo-600"
+                          : "text-gray-700"
+                      }
+                    `}
+                    />
                   </div>
-                )}
 
-                {!isSidebarCollapsed && activeModal === item.id && (
-                  <span className="absolute right-3">
-                    <ArrowRight className="w-4 h-4" />
-                  </span>
-                )}
+                  {!isSidebarCollapsed && (
+                    <div className="flex flex-col text-left">
+                      <span
+                        className={`font-medium ${
+                          isAiTripPlanner ? "text-fuchsia-700 font-bold" : ""
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                      <span
+                        className={`text-xs ${
+                          activeModal === item.id
+                            ? "text-white/80"
+                            : isAiTripPlanner
+                            ? "text-fuchsia-600 font-medium"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {item.description}
+                      </span>
+                    </div>
+                  )}
 
-                {item.id === "AItrip" && !isSidebarCollapsed && (
-                  <span className="absolute -right-1 -top-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs py-1 px-2 rounded-bl-lg rounded-tr-lg font-medium transform rotate-12 shadow-sm">
-                    AI
-                  </span>
-                )}
-              </button>
-            ))}
+                  {!isSidebarCollapsed && activeModal === item.id && (
+                    <span className="absolute right-3">
+                      <ArrowRight className="w-4 h-4" />
+                    </span>
+                  )}
+
+                  {/* Badge for AI items */}
+                  {!isSidebarCollapsed && item.badge && (
+                    <span
+                      className={`absolute -right-1 -top-1 ${
+                        item.badgeColor
+                      } text-white text-xs py-1 px-2 
+                        rounded-bl-lg rounded-tr-lg font-medium shadow-sm
+                        ${
+                          isAiTripPlanner
+                            ? "transform rotate-12 animate-pulse"
+                            : "transform rotate-6"
+                        }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+
+                  {/* Special effects for AI Trip Planner */}
+                  {isAiTripPlanner && !isSidebarCollapsed && (
+                    <>
+                      {/* Starburst effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-400/20 to-pink-400/20 rounded-xl -z-10"></div>
+
+                      {/* Sparkling icons */}
+                      <span className="absolute top-1 left-32 text-yellow-400">
+                        <Sparkles className="w-3 h-3 animate-ping" />
+                      </span>
+                      <span className="absolute bottom-1 right-12 text-orange-400">
+                        <Zap className="w-3 h-3 animate-bounce" />
+                      </span>
+
+                      {/* Clickbait ribbon */}
+                      {!activeModal && (
+                        <div className="absolute -right-12 top-3 bg-red-500 text-white px-10 py-0.5 transform rotate-45 text-xs font-bold shadow-md">
+                          TRENDING
+                        </div>
+                      )}
+                    </>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {!isSidebarCollapsed && showTip && !activeModal && (
@@ -354,6 +454,14 @@ const Menu = ({ isOpen, onClose, tripData }) => {
                     {getActiveItem()?.description}
                   </p>
                 </div>
+
+                {/* Special badge for AI-powered modals in header */}
+                {getActiveItem()?.isAI && (
+                  <span className="bg-white/20 text-white text-xs py-1 px-2 rounded-md font-medium flex items-center gap-1">
+                    <Bot className="w-3 h-3" />
+                    AI-POWERED
+                  </span>
+                )}
               </div>
 
               <button
@@ -363,6 +471,18 @@ const Menu = ({ isOpen, onClose, tripData }) => {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Special banner for AI Trip Planner */}
+            {activeModal === "AItrip" && (
+              <div className="bg-gradient-to-r from-fuchsia-500 to-pink-500 p-2 text-white text-center text-sm font-medium flex items-center justify-center gap-2">
+                <Flame className="w-4 h-4" />
+                <span>
+                  This AI planner has created over 10,000 personalized trips
+                  this week!
+                </span>
+                <Flame className="w-4 h-4" />
+              </div>
+            )}
 
             <div className="p-6 overflow-y-auto flex-grow">
               {renderModalContent()}
@@ -410,6 +530,9 @@ const Menu = ({ isOpen, onClose, tripData }) => {
         }
         .animate-pulse {
           animation: pulse 2s infinite;
+        }
+        .animate-pulse-slow {
+          animation: pulse 3s infinite;
         }
 
         @keyframes pulse {

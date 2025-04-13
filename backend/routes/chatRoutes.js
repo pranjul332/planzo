@@ -480,33 +480,39 @@ router.post('/:chatId/ai-trip', async (req, res) => {
 
     // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Create prompt for the AI
     const prompt = `As an AI travel planner, create a detailed trip plan for ${numMembers} people visiting ${destinations.join(
       ", "
-    )} for ${numDays} days with a budget of $${budget}. The trip quality should be ${quality}. Provide a structured response with specific costs and suggestions for accommodation, activities, food, and transportation. Include a day-by-day itinerary. Return ONLY a JSON object with no additional text or markdown formatting.
+    )} for ${numDays} days with a budget of ₹${budget}. The trip quality should be ${quality}. 
+    IMPORTANT: ALL costs MUST be provided in Indian Rupees (INR) only. Include the ₹ symbol before each numerical cost value.
+    Provide a structured response with specific costs and suggestions for accommodation, activities, food, and transportation. Include a day-by-day itinerary. Return ONLY a JSON object with no additional text or markdown formatting.
 
 The response should follow this exact structure:
 {
   "accommodation": {
-    "cost": number,
-    "suggestions": ["suggestion1", "suggestion2", ...]
+    "cost": number, // Total cost in INR (without ₹ symbol in this field)
+    "suggestions": ["₹X per night for Hotel A", "₹Y per night for Airbnb B", ...]
   },
   "activities": {
-    "cost": number,
-    "suggestions": ["activity1", "activity2", ...]
+    "cost": number, // Total cost in INR (without ₹ symbol in this field)
+    "suggestions": ["₹X for Activity 1", "₹Y for Activity 2", ...]
   },
   "food": {
-    "cost": number,
-    "suggestions": ["food1", "food2", ...]
+    "cost": number, // Total cost in INR (without ₹ symbol in this field)
+    "suggestions": ["₹X per meal at Restaurant A", "₹Y for street food options", ...]
   },
   "transportation": {
-    "cost": number,
-    "suggestions": ["transport1", "transport2", ...]
+    "cost": number, // Total cost in INR (without ₹ symbol in this field)
+    "suggestions": ["₹X for local transport", "₹Y for taxi services", ...]
   },
-  "totalCost": number,
-  "itinerary": ["day 1 plan", "day 2 plan", ...]
+  "totalCost": number, // Total trip cost in INR (without ₹ symbol in this field)
+  "itinerary": [
+    "Day 1: [detailed plan with costs in INR]", 
+    "Day 2: [detailed plan with costs in INR]", 
+    ...
+  ]
 }`;
 
     const result = await model.generateContent(prompt);
@@ -621,7 +627,12 @@ router.post('/:chatId/ai-suggestions', async (req, res) => {
     const categoriesText = categories.join(", ");
     const prompt = `As a travel expert, provide detailed, specific, and helpful suggestions about ${city} for the following categories: ${categoriesText}. 
     
-For each category, provide at least 3 specific suggestions that are tailored to ${city}. 
+For each category, provide at least 3 specific suggestions that are tailored to ${city}.
+IMPORTANT: ALL costs MUST be provided in Indian Rupees (INR) only. Include the ₹ symbol before each numerical cost value.
+
+If "medical" is included in the categories, provide essential medical supplies and health precautions specifically needed for ${city}, considering its climate, altitude, disease risks, and local healthcare access. Include items like specific medications, first aid supplies (like glucose packets for hot regions), vaccination requirements, and health precautions.
+
+If "protips" is included in the categories, provide insider travel tips that aren't commonly found in guidebooks but would significantly improve a traveler's experience in ${city}, such as lesser-known spots, best times to visit popular attractions, local etiquette, useful apps or websites, packing hacks, or money-saving tricks.
     
 Format your response as a JSON object with no additional text or explanations, with this exact structure:
 
@@ -863,7 +874,7 @@ router.post('/:chatId/cost-estimate', async (req, res) => {
     }
 
     // Create the complete prompt for the AI
-    const prompt = `As a travel cost expert, provide a detailed cost analysis for ${city} regarding ${category} costs.
+    const prompt = `As a travel cost expert, provide a detailed cost analysis for ${city} regarding ${category} costs.IMPORTANT: ALL costs MUST be provided in Indian Rupees (INR) only. Include the ₹ symbol before each numerical cost value.
 
 ${categorySpecificPrompt}
 
@@ -873,17 +884,17 @@ Return ONLY a JSON object with no additional text, markdown, or code block forma
 {
   "low": {
     "amount": number,
-    "currency": "USD",
+    "currency": "INR",
     "description": "Budget-friendly estimate explanation"
   },
   "medium": {
     "amount": number,
-    "currency": "USD",
+    "currency": "INR",
     "description": "Mid-range estimate explanation"
   },
   "high": {
     "amount": number,
-    "currency": "USD",
+    "currency": "INR",
     "description": "Premium estimate explanation"
   },
   "breakdown": [

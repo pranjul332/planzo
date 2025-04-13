@@ -4,6 +4,7 @@ import {
   Users,
   Calendar,
   DollarSign,
+  IndianRupee,
   Star,
   Loader2,
   Plus,
@@ -259,12 +260,12 @@ export default function AiTripPlanner({ onPlanGenerated }) {
               <div className="space-y-6">
                 <div>
                   <label className="block text-gray-700 font-medium mb-2">
-                    <DollarSign className="w-4 h-4 inline-block mr-2 text-indigo-600" />
-                    Budget (USD)
+                    <IndianRupee className="w-4 h-4 inline-block mr-2 text-indigo-600" />
+                    Budget (INR)
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <DollarSign className="w-5 h-5 text-gray-400" />
+                      <IndianRupee className="w-5 h-5 text-gray-400" />
                     </div>
                     <input
                       type="number"

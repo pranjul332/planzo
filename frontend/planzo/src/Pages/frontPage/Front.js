@@ -18,6 +18,7 @@ import {
   MessageCircle,
   Brain,
   DollarSign,
+  IndianRupee,
   PlusCircle,
   Zap,
   BarChart,
