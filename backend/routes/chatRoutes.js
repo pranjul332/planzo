@@ -587,6 +587,221 @@ The response should follow this exact structure:
   }
 });
 
+// AI Trip Suggestions Route
+router.post('/:chatId/ai-suggestions', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { city, categories } = req.body;
+    const auth0Id = req.userId;
+
+    // Validate request
+    if (!city || !categories || !Array.isArray(categories) || categories.length === 0) {
+      return res.status(400).json({ 
+        message: 'City and at least one suggestion category are required' 
+      });
+    }
+
+    // Find the group chat and ensure the user is a member
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res.status(404).json({ 
+        message: "Group chat not found or access denied" 
+      });
+    }
+
+    // Initialize Gemini AI
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Using the free version
+
+    // Create prompt for the AI based on the city and selected categories
+    const categoriesText = categories.join(", ");
+    const prompt = `As a travel expert, provide detailed, specific, and helpful suggestions about ${city} for the following categories: ${categoriesText}. 
+    
+For each category, provide at least 3 specific suggestions that are tailored to ${city}. 
+    
+Format your response as a JSON object with no additional text or explanations, with this exact structure:
+
+{
+  "suggestions": [
+    {
+      "category": "category name",
+      "items": [
+        {
+          "title": "short title",
+          "description": "detailed suggestion"
+        },
+        // more items...
+      ]
+    },
+    // more categories...
+  ]
+}`;
+
+    // Generate content with Gemini
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    let responseText = response.text();
+    
+    // Clean up the response text to ensure valid JSON
+    responseText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+    
+    let suggestionsData;
+    try {
+      // Parse the JSON response
+      suggestionsData = JSON.parse(responseText);
+      
+      // Validate structure
+      if (!suggestionsData.suggestions || !Array.isArray(suggestionsData.suggestions)) {
+        throw new Error("Invalid response structure");
+      }
+      
+      // Find the member to get their name
+      const member = groupChat.members.find(m => m.auth0Id === auth0Id);
+      
+      // Create a new message with the AI suggestions as an attachment
+      const newMessage = {
+        sender: auth0Id,
+        senderName: member ? member.name : "Unknown User",
+        content: `Generated travel suggestions for ${city}`,
+        timestamp: new Date(),
+        attachments: [
+          {
+            type: "ai-trip-plan",
+            data: {
+              city,
+              categories: categories,
+              suggestions: suggestionsData.suggestions
+            }
+          }
+        ]
+      };
+      
+      // Add the message to the chat
+      groupChat.messages.push(newMessage);
+      await groupChat.save();
+      
+      res.json({
+        city,
+        categories,
+        suggestions: suggestionsData.suggestions
+      });
+    } catch (parseError) {
+      console.error('Error parsing AI response:', parseError);
+      console.error('Raw response:', responseText);
+      
+      // Try to repair the JSON
+      try {
+        const repairedJson = jsonrepair(responseText);
+        suggestionsData = JSON.parse(repairedJson);
+        
+        if (!suggestionsData.suggestions || !Array.isArray(suggestionsData.suggestions)) {
+          throw new Error("Invalid response structure after repair");
+        }
+        
+        // Find the member to get their name
+        const member = groupChat.members.find(m => m.auth0Id === auth0Id);
+        
+        // Create a new message with the AI suggestions as an attachment
+        const newMessage = {
+          sender: auth0Id,
+          senderName: member ? member.name : "Unknown User",
+          content: `Generated travel suggestions for ${city}`,
+          timestamp: new Date(),
+          attachments: [
+            {
+              type: "ai-trip-plan",
+              data: {
+                city,
+                categories: categories,
+                suggestions: suggestionsData.suggestions
+              }
+            }
+          ]
+        };
+        
+        // Add the message to the chat
+        groupChat.messages.push(newMessage);
+        await groupChat.save();
+        
+        res.json({
+          city,
+          categories,
+          suggestions: suggestionsData.suggestions
+        });
+      } catch (repairError) {
+        res.status(500).json({ 
+          message: 'Error processing AI response',
+          error: parseError.message,
+          rawResponse: responseText 
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error generating AI suggestions:', error);
+    res.status(500).json({ 
+      message: 'Error generating travel suggestions',
+      error: error.message 
+    });
+  }
+});
+ 
+// Get saved AI suggestions for a specific city
+router.get('/:chatId/ai-suggestions/:city', async (req, res) => {
+  try {
+    const { chatId, city } = req.params;
+    const auth0Id = req.userId;
+
+    // Find the group chat and ensure the user is a member
+    const groupChat = await GroupChat.findOne({
+      chatId,
+      "members.auth0Id": auth0Id
+    });
+
+    if (!groupChat) {
+      return res.status(404).json({ 
+        message: "Group chat not found or access denied" 
+      });
+    }
+
+    // Find messages with AI suggestions for the specified city
+    const suggestionsMessages = groupChat.messages.filter(message => 
+      message.attachments && 
+      message.attachments.some(attachment => 
+        attachment.type === "ai-trip-plan" && 
+        attachment.data && 
+        attachment.data.city && 
+        attachment.data.city.toLowerCase() === city.toLowerCase()
+      )
+    );
+
+    if (suggestionsMessages.length === 0) {
+      return res.status(404).json({
+        message: `No saved suggestions found for ${city}`
+      });
+    }
+
+    // Get the most recent suggestion
+    const latestSuggestion = suggestionsMessages
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+    
+    const suggestionData = latestSuggestion.attachments.find(
+      attachment => attachment.type === "ai-trip-plan"
+    ).data;
+
+    res.json(suggestionData);
+  } catch (error) {
+    console.error('Error fetching AI suggestions:', error);
+    res.status(500).json({ 
+      message: 'Error fetching travel suggestions',
+      error: error.message 
+    });
+  }
+});
+
 
 
 module.exports = router;
