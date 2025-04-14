@@ -736,22 +736,27 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
                   <Users className="w-6 h-6 text-purple-600" />
                   <span className="text-gray-800">Members</span>
                 </h2>
-                <button
-                  onClick={handleInviteMember}
-                  disabled={isGeneratingLink}
-                  className={`
-            px-4 py-2 rounded-lg font-medium 
-            ${
-              isGeneratingLink
-                ? "bg-purple-100 text-purple-400"
-                : "bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
-            } 
-            transition-all flex items-center gap-2
-          `}
-                >
-                  <Plus className="w-5 h-5" />
-                  {isGeneratingLink ? "Generating..." : "Invite Member"}
-                </button>
+                <div className="flex flex-col items-end">
+                  <button
+                    onClick={handleInviteMember}
+                    disabled={isGeneratingLink}
+                    className={`
+          px-4 py-2 rounded-lg font-medium 
+          ${
+            isGeneratingLink
+              ? "bg-purple-100 text-purple-400"
+              : "bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
+          } 
+          transition-all flex items-center gap-2
+        `}
+                  >
+                    <Plus className="w-5 h-5" />
+                    {isGeneratingLink ? "Generating..." : "Invite Member"}
+                  </button>
+                  <span className="text-xs text-gray-500 mt-1">
+                    Only admins can invite new members
+                  </span>
+                </div>
               </div>
               <div className="space-y-4">
                 {safeMembers.map((member) => (
