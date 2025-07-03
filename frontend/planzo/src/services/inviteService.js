@@ -27,7 +27,16 @@ export const useInvitationService = () => {
         }
       );
 
-      return response.data;
+      // Instead of returning just the API response, create a frontend invitation link
+      const inviteCode = response.data.inviteCode;
+      const frontendUrl =
+        process.env.REACT_APP_FRONTEND_URL || "https://pl-anzo.vercel.app";
+
+      return {
+        ...response.data,
+        inviteLink: `${frontendUrl}/invite/${inviteCode}`,
+        inviteCode: inviteCode,
+      };
     } catch (error) {
       console.error("Error generating invite link:", error);
       throw error;
@@ -64,8 +73,30 @@ export const useInvitationService = () => {
     }
   };
 
+  // Get invitation details (useful for displaying trip info before accepting)
+  const getInvitationDetails = async (inviteCode) => {
+    try {
+      const response = await axios.get(
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+        }/trips/invite/${inviteCode}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error getting invitation details:", error);
+      throw error;
+    }
+  };
+
   return {
     generateInviteLink,
     acceptInvitation,
+    getInvitationDetails,
   };
 };

@@ -215,8 +215,10 @@ router.post("/:tripId/invite", async (req, res) => {
 
     await invitation.save();
 
-    // Generate the shareable link
-    const inviteLink = `${`localhost:3000`}/invite/${inviteCode}`;
+    // Generate the shareable link using your frontend URL
+    const frontendUrl =
+      process.env.REACT_APP_FRONTEND_URL || "https://pl-anzo.vercel.app";
+    const inviteLink = `${frontendUrl}/invite/${inviteCode}`;
 
     res.status(201).json({ inviteLink, inviteCode });
   } catch (error) {
@@ -225,13 +227,50 @@ router.post("/:tripId/invite", async (req, res) => {
   }
 });
 
-// Step 2: Add a route to handle accepting invitations
+// Add a route to get invitation details (public route - no authentication required)
+router.get("/invite/:inviteCode", async (req, res) => {
+  try {
+    const { inviteCode } = req.params;
+
+    const invitation = await TripInvitation.findOne({
+      inviteCode,
+      expiresAt: { $gt: new Date() },
+      accepted: false,
+    });
+
+    if (!invitation) {
+      return res
+        .status(404)
+        .json({ message: "Invitation not found or expired" });
+    }
+
+    // Get trip details
+    const trip = await Trip.findOne({ tripId: invitation.tripId });
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    res.json({
+      tripId: trip.tripId,
+      tripName: trip.name,
+      tripDescription: trip.description,
+      tripLocation: trip.location,
+      tripDates: trip.dates,
+      inviteCode,
+      expiresAt: invitation.expiresAt,
+    });
+  } catch (error) {
+    console.error("Error fetching invitation details:", error);
+    res.status(500).json({ message: "Failed to fetch invitation details" });
+  }
+});
+
+// Accept invitation route
 router.post("/invite/:inviteCode/accept", async (req, res) => {
   try {
     const { inviteCode } = req.params;
     const auth0Id = req.userId;
     console.log(auth0Id);
-    
 
     // Find the invitation
     const invitation = await TripInvitation.findOne({
@@ -247,9 +286,8 @@ router.post("/invite/:inviteCode/accept", async (req, res) => {
 
     // Get the trip
     const trip = await Trip.findOne({ tripId: invitation.tripId });
-    const chat = await GroupChat.findOne({tripId:invitation.tripId})
-    // console.log(chat);
-    
+    const chat = await GroupChat.findOne({ tripId: invitation.tripId });
+
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }
@@ -258,14 +296,11 @@ router.post("/invite/:inviteCode/accept", async (req, res) => {
     let userName = "New Member";
     try {
       const userInfo = await getUserInfo(auth0Id);
-      // console.log(userInfo);
-      
       userName = userInfo.name || userInfo.nickname || "New Member";
     } catch (error) {
       console.warn(
         `Could not fetch Auth0 user info: ${error.message}. Using default name.`
       );
-      // Continue with the default name rather than failing the request
     }
 
     // Check if user is already a member
@@ -273,21 +308,30 @@ router.post("/invite/:inviteCode/accept", async (req, res) => {
       (member) => member.auth0Id === auth0Id
     );
 
-    if (!isAlreadyMember) {
-      trip.members.push({
-        auth0Id: auth0Id, // Make sure to save the auth0Id in the members array
-        name: userName,
-        role: "Member",
-      });
-      chat.members.push({
-        auth0Id: auth0Id, // Make sure to save the auth0Id in the members array
-        name: userName,
-        role: "Member",
-      });
-
-      await trip.save();
-      await chat.save()
+    if (isAlreadyMember) {
+      return res
+        .status(400)
+        .json({ message: "You are already a member of this trip" });
     }
+
+    // Add user to trip members
+    trip.members.push({
+      auth0Id: auth0Id,
+      name: userName,
+      role: "Member",
+    });
+
+    // Add user to chat if chat exists
+    if (chat) {
+      chat.members.push({
+        auth0Id: auth0Id,
+        name: userName,
+        role: "Member",
+      });
+      await chat.save();
+    }
+
+    await trip.save();
 
     // Mark invitation as accepted
     invitation.accepted = true;
@@ -298,6 +342,7 @@ router.post("/invite/:inviteCode/accept", async (req, res) => {
     res.status(200).json({
       message: "Successfully joined the trip",
       tripId: trip.tripId,
+      tripName: trip.name,
     });
   } catch (error) {
     console.error("Error accepting invitation:", error);

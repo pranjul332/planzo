@@ -25,7 +25,7 @@ export const useWebSocketService = () => {
 
       console.log("Token obtained, connecting to socket...");
 
-      const socketUrl = "http://localhost:5000";
+      const socketUrl = "https://pl-anzo.vercel.app";
       const newSocket = io(socketUrl, {
         auth: {
           token: `Bearer ${token}`,
