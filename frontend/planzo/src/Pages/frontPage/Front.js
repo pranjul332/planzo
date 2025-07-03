@@ -480,21 +480,21 @@ export default function Front() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <a
-                href="/flights"
+                href="/trip/manageTrip"
                 className="group relative px-8 py-4 overflow-hidden rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <span className="absolute top-0 right-full w-full h-full bg-white opacity-20 transform -skew-x-45 transition-all duration-500 ease-out group-hover:right-0"></span>
                 <span className="relative flex items-center justify-center">
-                  Book Your Trip{" "}
+                  Plan Your Trip{" "}
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </a>
-              <a
+              {/* <a
                 href="/trip/manageTrip"
                 className="bg-transparent border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-full text-lg font-medium hover:bg-blue-50 transition-colors hover:shadow-lg"
               >
                 Manage Existing Trip
-              </a>
+              </a> */}
             </div>
           </div>
         </div>

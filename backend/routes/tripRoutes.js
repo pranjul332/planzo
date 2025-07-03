@@ -3,7 +3,7 @@ const router = express.Router();
 const Trip = require("../db/schema/Trips");
 const GroupChat = require("../db/schema/Chat")
 const TripInvitation = require("../db/schema/TripInvite")
-const { v4: uuidv4 } = require("uuid");
+const { v4: uuidv4 } = require("uuid"); 
 const {getUserInfo} =require("../utils/auth0service")
 
 
