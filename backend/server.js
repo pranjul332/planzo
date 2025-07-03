@@ -21,13 +21,20 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "https://pl-anzo.vercel.app/",
+    origin: process.env.REACT_APP_FRONTEND_URL || "https://pl-anzo.vercel.app",
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.REACT_APP_FRONTEND_URL || "https://pl-anzo.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 connectDB();
