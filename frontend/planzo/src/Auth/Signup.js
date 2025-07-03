@@ -18,7 +18,7 @@ const SignUp = () => {
             picture: user.picture,
             sub: user.sub,
           };
-          await axios.post("http://localhost:5000/api/users", userData);
+          await axios.post("https://pl-anzo.onrender.com/api/users", userData);
           console.log("User details saved");
         } catch (error) {
           console.error("Error saving user details:", error);
