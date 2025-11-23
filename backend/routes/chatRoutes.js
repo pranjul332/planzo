@@ -502,8 +502,10 @@ router.post('/:chatId/ai-trip', async (req, res) => {
 
     // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const models = genAI.listModels();
+    console.log("Available Models:", models);
+    
     // Create prompt for the AI
     const prompt = `As an AI travel planner, create a detailed trip plan for ${numMembers} people visiting ${destinations.join(
       ", "
