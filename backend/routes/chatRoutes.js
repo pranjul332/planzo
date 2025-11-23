@@ -502,12 +502,8 @@ router.post('/:chatId/ai-trip', async (req, res) => {
 
     // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    // const models = genI.listModels();
-    (async () => {
-      const models = await genAI.listModels();
-      console.log(models);
-    })();
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+
 
     // Create prompt for the AI
     const prompt = `As an AI travel planner, create a detailed trip plan for ${numMembers} people visiting ${destinations.join(
@@ -648,7 +644,7 @@ router.post('/:chatId/ai-suggestions', async (req, res) => {
 
     // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }); // Using the free version
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" }); // Using the free version
 
     // Create prompt for the AI based on the city and selected categories
     const categoriesText = categories.join(", ");
@@ -876,7 +872,7 @@ router.post('/:chatId/cost-estimate', async (req, res) => {
 
     // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }); // Using free version
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" }); // Using free version
 
     // Create dynamic prompt based on category
     let categorySpecificPrompt = "";
