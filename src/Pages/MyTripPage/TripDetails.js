@@ -105,7 +105,7 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
             {/* Budget Overview */}
             <div className="bg-gray-50 rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                <DollarSign className="w-6 h-6 text-purple-600" />
+                <IndianRupee className="w-6 h-6 text-purple-600" />
                 Budget Overview
               </h2>
               <div className="h-72">
@@ -210,10 +210,10 @@ const TripDetails = ({ trip, onClose, onAddMember }) => {
 
             {/* Chat Button */}
             <Link to="/chat/chatname">
-            <button className="w-full bg-purple-600 text-white rounded-xl py-4 px-6 flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors text-lg font-medium shadow-sm">
-              <MessageCircle className="w-6 h-6" />
-              Start Group Chat
-            </button>
+              <button className="w-full bg-purple-600 text-white rounded-xl py-4 px-6 flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors text-lg font-medium shadow-sm">
+                <MessageCircle className="w-6 h-6" />
+                Start Group Chat
+              </button>
             </Link>
           </div>
         </div>

@@ -347,11 +347,11 @@ const CreateTripModal = ({ isOpen, onClose, onCreateTrip, initialData }) => {
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <Wallet className="w-4 h-4 text-emerald-500" />
-                    Budget (USD)
+                    Budget (INR)
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-3 text-gray-500">
-                      $
+                      ₹
                     </span>
                     <input
                       type="number"
